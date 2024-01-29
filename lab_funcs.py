@@ -75,7 +75,8 @@ def Rwave_peaks(ecg, d_ecg, Rwave_peaks_d_ecg, time):
     else:
         # Handle the case where the length is not sufficient (e.g., print an error message)
         print("Not enough peaks to create Rwave array.")
-        Rwave = np.empty(1)
+        Rwave_t = np.empty(1)
+        return Rwave_t
 
     for i in range(0, len(Rwave)): # for all peaks
         ecgrange = ecg[Rwave_peaks_d_ecg[i]:Rwave_peaks_d_ecg[i+1]] # create array that contains of the ecg within the d_ecg_peaks
