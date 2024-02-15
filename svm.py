@@ -22,23 +22,23 @@ column_names = [
 
 ecgs = []
 labels = []
+min_freq = 5
+max_freq = 40
 
 for csv in af_csv:
     df = pd.read_csv(csv)
-    ecg = basic.flatten_filter(df.ECG)
-    # dfs.append((ecg, True))
-    if not any(np.isnan(value) for value in ecg):
-        ecgs.append(ecg)
-        labels.append(True)
+    ecg = basic.interpolate(df.ECG, 0)
+    ecg = basic.flatten_filter(ecg, min_freq, max_freq)
+    ecgs.append(ecg)
+    labels.append(True)
 
 print('non')
 for csv in non_af_csv:
     df = pd.read_csv(csv)
-    ecg = basic.flatten_filter(df.ECG)
-    # dfs.append((ecg, False))
-    if not any(np.isnan(value) for value in ecg):
-        ecgs.append(ecg)
-        labels.append(False)
+    ecg = basic.interpolate(df.ECG, 0)
+    ecg = basic.flatten_filter(ecg, min_freq, max_freq)
+    ecgs.append(ecg)
+    labels.append(False)
 
 print(len(ecgs), len(labels))
 

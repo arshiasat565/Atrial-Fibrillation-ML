@@ -7,23 +7,51 @@ import matplotlib.pyplot as plt
 import glob
 import lab_funcs
 
-def flatten_filter(ecg):
-    wander_baseline = pd.Series(sps.medfilt(ecg, kernel_size=61))
-    # plt.plot(wander_baseline)
+sample_rate = 120
 
-    # filter ecg w butterworth lowpass
-    Wn = 0.2
-    b, a = sps.butter(4, Wn, 'low', analog=False)
-    filt_ecg = sps.filtfilt(b, a, ecg)
+def lowpass(data: np.ndarray, cutoff: float, sample_rate: float, poles: int = 5):
+    sos = sps.butter(poles, cutoff, 'lowpass', fs=sample_rate, output='sos')
+    filtered_lp_data = sps.sosfiltfilt(sos, data)
+    return filtered_lp_data
 
-    # flatten ecg
-    flat_filt_ecg = filt_ecg - wander_baseline
-    # plt.plot(df.ECG)
-    # plt.plot(filt_ecg)
-    # plt.title('filt_ecg')
-    # plt.show()
+def highpass(data: np.ndarray, cutoff: float, sample_rate: float, poles: int = 5):
+    sos = sps.butter(poles, cutoff, 'highpass', fs=sample_rate, output='sos')
+    filtered_hp_data = sps.sosfiltfilt(sos, data)
+    return filtered_hp_data
 
-    return flat_filt_ecg
+def bandpass(data: np.ndarray, edges: list[float], sample_rate: float, poles: int = 5):
+    sos = sps.butter(poles, edges, 'bandpass', fs=sample_rate, output='sos')
+    filtered_bp_data = sps.sosfiltfilt(sos, data)
+    return filtered_bp_data
+
+def flatten_filter(ecg, min, max):
+    ecg = lowpass(ecg, max, sample_rate)
+    ecg = highpass(ecg, min, sample_rate)
+    ecg = bandpass(ecg, [min, max], sample_rate)
+    return ecg
+
+def interpolate(arr, start):
+    nan_indices = np.where(np.isnan(arr))[0]
+    
+    for idx in nan_indices:
+        left_idx = idx - 1
+        right_idx = idx + 1
+
+        # find closest non-nans
+        while np.isnan(arr[start+left_idx]) and left_idx >= 0:
+            left_idx -= 1
+        while np.isnan(arr[start+right_idx]) and right_idx < start+len(arr):
+            right_idx += 1
+
+        # interpolation
+        if left_idx >= 0 and right_idx < start+len(arr):
+            left_val = arr[start+left_idx]
+            right_val = arr[start+right_idx]
+            slope = (right_val - left_val) / (right_idx - left_idx)
+            for i in range(left_idx + 1, right_idx):
+                arr[start+i] = left_val + slope * (i - left_idx)
+
+    return arr
 
 # find intervals
 def Rpeak_intervals(ecg, time):
