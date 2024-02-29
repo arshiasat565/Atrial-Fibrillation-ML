@@ -53,6 +53,22 @@ def interpolate(arr, start):
 
     return arr
 
+def interp_flat(df, start, min_freq, max_freq):
+    result = interpolate(df.ECG, start)
+    result = flatten_filter(result, min_freq, max_freq)
+    
+    # fig, ((ax1, ax2)) = plt.subplots(1, 2, figsize=(10, 3), sharex=True, sharey=True)
+    # ax1.plot(df.Time, df.ECG)
+    # ax1.set_title("Original Signal")
+    # ax1.margins(0, .1)
+    # ax1.grid(alpha=.5, ls='--')
+    # ax2.plot(df.Time, result)
+    # ax2.set_title("After Signal")
+    # ax1.margins(0, .1)
+    # ax2.grid(alpha=.5, ls='--')
+    # plt.show()
+    return result
+
 # find intervals
 def Rpeak_intervals(ecg, time):
     d_ecg, peaks_d_ecg = lab_funcs.decg_peaks(ecg, time)
@@ -61,42 +77,35 @@ def Rpeak_intervals(ecg, time):
     Rwave_t_peaks = lab_funcs.Rwave_t_peaks(time, Rpeaks)
     Rpeak_intervals = np.diff(Rwave_t_peaks)
 
-    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 3), sharex=True, sharey=True)
-    # ax1.plot(ecg)
-    # ax1.set_title("Original Signal")
-    # ax1.margins(0, .1)
-    # ax1.grid(alpha=.5, ls='--')
-    ax2.plot(time[0:len(time)-1], d_ecg, color = 'red')
-    ax2.plot(time[peaks_d_ecg], d_ecg[peaks_d_ecg], "x", color = 'g')
-    ax2.set_xlabel('Time [s]')
-    ax2.set_ylabel('Derivative of activation []')
-    ax2.set_title('R-wave peaks step 1: peaks of derivative of ECG')
-    ax2.grid(alpha=.1, ls='--')
-    ax3.plot(time[0:len(time)-1], d_ecg, color = 'red') 
-    ax3.plot(time[filt_peaks], d_ecg[filt_peaks], "x", color = 'g')
-    #plt.axhline(meanpeaks_d_ecg, color = 'b')
-    #plt.axhline(max_d_ecg, color = 'b')
-    # thres = ax3.axhline(threshold, color = 'black', label = 'threshold')
-    ax3.set_title('R-wave peaks step 2: d_ECG peaks')
-    ax3.set_ylabel('Derivative of activation []')
-    ax3.set_xlabel('Time [s]')
-    ax3.grid(alpha=.1, ls='--')
-    ax4.plot(time[0:len(time)-1], d_ecg, color = 'r', label = 'Derivative of ECG')
-    ax4.plot(time[filt_peaks], d_ecg[filt_peaks], "x", color = 'g')
-    ax4.set_ylabel('Activation Derivative []')
-    ax4.set_xlabel('Time [s]') 
-    ax4.set_title('R-wave peaks step 3: R-wave peaks')
-    ax4.plot(time, ecg, color = 'b', label = 'ECG')
-    ax4.plot(time[Rpeaks], ecg[Rpeaks], "x", color = 'y')
-    ax4.set_ylabel('Activation []')
-    ax4.grid(alpha=.1, ls='--')
-    plt.tight_layout()
-    plt.show()
+    # fig, ((ax2, ax3, ax4)) = plt.subplots(1, 3, figsize=(10, 3), sharex=True, sharey=True)
+    # ax2.plot(time[0:len(time)-1], d_ecg, color = 'red')
+    # ax2.plot(time[peaks_d_ecg], d_ecg[peaks_d_ecg], "x", color = 'g')
+    # ax2.set_xlabel('Time [s]')
+    # ax2.set_ylabel('Derivative of activation []')
+    # ax2.set_title('R-wave peaks step 1: peaks of derivative of ECG')
+    # ax2.grid(alpha=.1, ls='--')
+    # ax3.plot(time[0:len(time)-1], d_ecg, color = 'red') 
+    # ax3.plot(time[filt_peaks], d_ecg[filt_peaks], "x", color = 'g')
+    # ax3.set_title('R-wave peaks step 2: d_ECG peaks')
+    # ax3.set_ylabel('Derivative of activation []')
+    # ax3.set_xlabel('Time [s]')
+    # ax3.grid(alpha=.1, ls='--')
+    # ax4.plot(time[0:len(time)-1], d_ecg, color = 'r', label = 'Derivative of ECG')
+    # ax4.plot(time[filt_peaks], d_ecg[filt_peaks], "x", color = 'g')
+    # ax4.set_ylabel('Activation Derivative []')
+    # ax4.set_xlabel('Time [s]') 
+    # ax4.set_title('R-wave peaks step 3: R-wave peaks')
+    # ax4.plot(time, ecg, color = 'b', label = 'ECG')
+    # ax4.plot(time[Rpeaks], ecg[Rpeaks], "x", color = 'y')
+    # ax4.set_ylabel('Activation []')
+    # ax4.grid(alpha=.1, ls='--')
+    # plt.tight_layout()
+    # plt.show()
 
     avg_intv = np.mean(Rpeak_intervals)
     min_intv = np.min(Rpeak_intervals)
     max_intv = np.max(Rpeak_intervals)
-    print(avg_intv, min_intv, max_intv)
+    # print(avg_intv, min_intv, max_intv, len(Rwave_t_peaks))
     
     return Rpeak_intervals
 
@@ -114,49 +123,30 @@ def fft(ecg):
     plt.show()
     
 
-# af_csv = glob.glob('mimic_perform_af_csv/*.csv')
-# non_af_csv = glob.glob('mimic_perform_non_af_csv/*.csv')
-
-# column_names = [
-#     "Time",
-#     "PPG",
-#     "ECG",
-#     "resp"
-# ]
-
-# af_dfs = []
-# non_af_dfs = []
-
-# for csv in af_csv:
-#     df = pd.read_csv(csv)
-#     ecg = flatten_filter(df.ECG)
-#     peak_intv = Rpeak_intervals(ecg)
-#     fft(ecg)
-#     af_dfs.append(peak_intv)
-
-# print('non')
-# for csv in non_af_csv:
-#     df = pd.read_csv(csv)
-#     ecg = flatten_filter(df.ECG)
-#     peak_intv = Rpeak_intervals(ecg)
-#     fft(ecg)
-#     non_af_dfs.append(peak_intv)
 
 
-# df = pd.read_csv('mimic_perform_non_af_csv/mimic_perform_non_af_010_data.csv')
 
-# # plt.plot(df.Time, df.ECG)
-# # plt.title('Normal ECG segment')
-# # plt.ylabel('Amplitude (mV)')
-# # plt.xlabel('Time [s]')
-# # plt.show()
-# # peaks,_ = scipy.signal.find_peaks(df.PPG)
-# # plt.plot(df.Time, df.PPG)
-# # plt.plot(df.Time[peaks], df.PPG[peaks], "x")
-# # plt.show()
+# df = pd.read_csv('mimic_perform_non_af_csv/mimic_perform_non_af_001_data.csv')
+# print(df.shape)
 
-# flat_filt_ecg = flatten_filter(df.ECG)
+# plt.plot(df.Time, df.ECG)
+# plt.title('Normal ECG segment')
+# plt.ylabel('Amplitude (mV)')
+# plt.xlabel('Time [s]')
+# plt.show()
+# peaks,_ = scipy.signal.find_peaks(df.PPG)
+# plt.plot(df.Time, df.PPG)
+# plt.plot(df.Time[peaks], df.PPG[peaks], "x")
+# plt.show()
 
-# Rpeak_intervals(flat_filt_ecg)
+# min_freq = 5
+# max_freq = 40
+# n = 2000
+# orig = df[:n]
+# print(orig.shape)
+
+# flat_filt_ecg = interp_flat(orig, 0, min_freq, max_freq)
+
+# Rpeak_intervals(flat_filt_ecg, orig.Time)
 
 # fft(flat_filt_ecg)

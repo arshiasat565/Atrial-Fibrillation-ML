@@ -4,7 +4,7 @@ import scipy.signal as sps
 import matplotlib.pyplot as plt
 import glob
 import lab_funcs
-import basic
+import preprocess
 import scipy.io.wavfile
 
 af_csv = glob.glob('mimic_perform_af_csv/*.csv')
@@ -27,16 +27,16 @@ df = pd.read_csv('mimic_perform_af_csv/mimic_perform_af_005_data.csv')
 start = 0
 end = -1
 ecg = df.ECG[start:end]
-ecg = basic.interpolate(ecg, start)
+ecg = preprocess.interpolate(ecg, start)
 time = df.Time[start:end]
 # plt.plot(ecg)
 
 # Apply a 40 Hz low-pass filter to the original data
-filtered_lp = basic.lowpass(ecg, 40, sample_rate)
+filtered_lp = preprocess.lowpass(ecg, 40, sample_rate)
 # Apply 5 Hz high-pass filter
-filtered_hp = basic.highpass(filtered_lp, 5, sample_rate)
+filtered_hp = preprocess.highpass(filtered_lp, 5, sample_rate)
 # Apply 5-40 Hz band-pass filter
-filtered_bp = basic.bandpass(filtered_hp, [5, 40], sample_rate)
+filtered_bp = preprocess.bandpass(filtered_hp, [5, 40], sample_rate)
 
 fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 3), sharex=True, sharey=True)
 ax1.plot(ecg)
@@ -62,4 +62,4 @@ plt.show()
 # avg_intv = np.mean(Rpeak_intervals)
 # print(avg_intv)
 
-basic.Rpeak_intervals(filtered_bp, time)
+preprocess.Rpeak_intervals(filtered_bp, time)

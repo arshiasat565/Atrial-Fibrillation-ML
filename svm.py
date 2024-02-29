@@ -4,9 +4,12 @@ import scipy.signal as sps
 import matplotlib.pyplot as plt
 import glob
 import lab_funcs
-import basic
+import preprocess
 from sklearn import svm
 from sklearn.datasets import make_classification
+from sklearn.model_selection import KFold
+from sklearn.model_selection import ShuffleSplit
+from sklearn.model_selection import cross_val_score
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
@@ -31,40 +34,102 @@ length = 150000 # 20 mins
 # filters
 for csv in af_csv:
     df = pd.read_csv(csv)
-    ecg = basic.interpolate(df.ECG, 0)
-    ecg = basic.flatten_filter(ecg, min_freq, max_freq)
+    ecg = preprocess.interp_flat(df, 0, min_freq, max_freq)
     ecgs.append(ecg)
     labels.append(True)
 
 print('non')
 for csv in non_af_csv:
     df = pd.read_csv(csv)
-    ecg = basic.interpolate(df.ECG, 0)
-    ecg = basic.flatten_filter(ecg, min_freq, max_freq)
+    ecg = preprocess.interp_flat(df, 0, min_freq, max_freq)
     ecgs.append(ecg)
     labels.append(False)
 
-# Rpeaks
+# Rpeak_intervals
 for ecg in ecgs:
-    d_ecg, peaks_d_ecg = lab_funcs.decg_peaks(ecg, df.Time)
-    filt_peaks = lab_funcs.d_ecg_peaks(d_ecg, peaks_d_ecg, df.Time, 0.5, 0.5)
-    ecg_Rpeaks = lab_funcs.Rwave_peaks(ecg, d_ecg, filt_peaks, df.Time)
-    Rwave_t_peaks = lab_funcs.Rwave_t_peaks(df.Time, ecg_Rpeaks)
-    Rpeak_intervals = np.diff(Rwave_t_peaks)
-    avg_intv = np.mean(Rpeak_intervals)
+    Rpeak_intervals = preprocess.Rpeak_intervals(ecg, df.Time)
     Rpeak_intvs.append(Rpeak_intervals)
 
-print(len(ecgs), len(Rpeak_intvs), len(labels))
-
-ecg_train, ecg_test, label_train, label_test = train_test_split(Rpeak_intvs, labels, test_size=0.2, random_state=8964)
+# for i, Rpeak_intv in enumerate(Rpeak_intvs):
+#     print(i, len(Rpeak_intv))
 
 clas = svm.SVC(kernel="linear")
 
-print(len(ecg_train), len(label_train))
+#10 fold cross validation svm, use full ecg (base)
+scores = cross_val_score(clas, ecgs, labels, cv=10)
 
-clas.fit(ecg_train, label_train)
+print("base Cross-Validation Scores:", scores)
 
-label_pred = clas.predict(ecg_test)
+mean_accuracy = np.mean(scores)
+print("Mean Accuracy:", mean_accuracy)
 
-acc = accuracy_score(label_test, label_pred)
-print(acc)
+
+#split ecg
+print("By ecg samples")
+sample_size = 37500 # 240 seconds
+ecg_samples = []
+sample_labels = []
+
+for i, ecg in enumerate(ecgs):
+    for j in range(0, len(ecg)-1, sample_size): # last signal removed
+        ecg_sample = ecg[j:j+sample_size]
+        # print(len(ecg_sample))
+        ecg_samples.append(ecg_sample)
+        sample_labels.append(labels[i])
+print("sample count:", len(ecg_samples))
+
+# 10 fold cross validation svm, use ecg samples
+# kfold
+kf = KFold(n_splits=10, shuffle=True)
+
+scores = cross_val_score(clas, ecg_samples, sample_labels, cv=kf)
+
+print("kf Cross-Validation Scores:", scores)
+
+mean_accuracy = np.mean(scores)
+print("Mean Accuracy:", mean_accuracy)
+
+# shuffle
+shuffle_split = ShuffleSplit(n_splits=10)
+scores = cross_val_score(clas, ecg_samples, sample_labels, cv=shuffle_split)
+
+print("shuffle Cross-Validation Scores:", scores)
+
+mean_accuracy = np.mean(scores)
+print("Mean Accuracy:", mean_accuracy)
+
+
+#split Rpeak_intvs
+print("By Rpeak_intv samples")
+sample_size = 100
+intv_samples = []
+sample_labels = []
+
+for i, Rpeak_intv in enumerate(Rpeak_intvs):
+    for j in range(0, len(Rpeak_intv), sample_size):
+        intv_sample = Rpeak_intv[j:j+sample_size]
+        # print(len(ecg_sample))
+        if len(intv_sample) == sample_size:
+            intv_samples.append(intv_sample)
+            sample_labels.append(labels[i])
+print("sample count:", len(intv_samples))
+
+# 10 fold cross validation svm, use Rpeak_intv samples
+# kfold
+kf = KFold(n_splits=10, shuffle=True)
+
+scores = cross_val_score(clas, intv_samples, sample_labels, cv=kf)
+
+print("kf Cross-Validation Scores:", scores)
+
+mean_accuracy = np.mean(scores)
+print("Mean Accuracy:", mean_accuracy)
+
+# shuffle
+shuffle_split = ShuffleSplit(n_splits=10)
+scores = cross_val_score(clas, intv_samples, sample_labels, cv=shuffle_split)
+
+print("shuffle Cross-Validation Scores:", scores)
+
+mean_accuracy = np.mean(scores)
+print("Mean Accuracy:", mean_accuracy)

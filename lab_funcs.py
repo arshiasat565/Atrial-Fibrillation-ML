@@ -43,8 +43,8 @@ def d_ecg_peaks(d_ecg, peaks_d_ecg, time, heightper, distanceper):
     max_d_ecg = np.max(d_ecg) #find max of the ecg signal
     threshold = np.mean([meanpeaks_d_ecg,max_d_ecg])*heightper # find mean of meanpeakecg and maxecg - this will be a good threshold for finding peaks. it filters out all the peaks from the bottom
     newpeaks_d_ecg,_ = sps.find_peaks(d_ecg, height = threshold) # find the new peaks
-    newpeaks_d_ecg_t = time[newpeaks_d_ecg]
-    newpeaks_d_ecg_t = newpeaks_d_ecg_t.reset_index(drop = True)
+    # newpeaks_d_ecg_t = time[newpeaks_d_ecg]
+    # newpeaks_d_ecg_t = newpeaks_d_ecg_t.reset_index(drop = True)
     meandistance = np.mean(np.diff(newpeaks_d_ecg))
     Rwave_peaks_d_ecg,_ = sps.find_peaks(d_ecg,height = threshold, distance = meandistance*distanceper) # 
     
