@@ -25,8 +25,9 @@ def bandpass(data: np.ndarray, edges: list[float], sample_rate: float, poles: in
     return filtered_bp_data
 
 def flatten_filter(ecg, min, max):
-    ecg = lowpass(ecg, max, sample_rate)
-    ecg = highpass(ecg, min, sample_rate)
+    # ecg = lowpass(ecg, max, sample_rate)
+    # ecg = highpass(ecg, min, sample_rate)
+    # only use bandpass for filtering
     ecg = bandpass(ecg, [min, max], sample_rate)
     return ecg
 
@@ -102,9 +103,9 @@ def Rpeak_intervals(ecg, time):
     # plt.tight_layout()
     # plt.show()
 
-    avg_intv = np.mean(Rpeak_intervals)
-    min_intv = np.min(Rpeak_intervals)
-    max_intv = np.max(Rpeak_intervals)
+    # avg_intv = np.mean(Rpeak_intervals)
+    # min_intv = np.min(Rpeak_intervals)
+    # max_intv = np.max(Rpeak_intervals)
     # print(avg_intv, min_intv, max_intv, len(Rwave_t_peaks))
     
     return Rpeak_intervals

@@ -31,29 +31,32 @@ max_freq = 40
 start = 0
 length = 150000 # 20 mins
 
-# filters
+# interpolate and bandpass ecgs
 for csv in af_csv:
     df = pd.read_csv(csv)
     ecg = preprocess.interp_flat(df, 0, min_freq, max_freq)
     ecgs.append(ecg)
     labels.append(True)
+    Rpeak_intervals = preprocess.Rpeak_intervals(ecg, df.Time)
+    Rpeak_intvs.append(Rpeak_intervals)
 
-print('non')
 for csv in non_af_csv:
     df = pd.read_csv(csv)
     ecg = preprocess.interp_flat(df, 0, min_freq, max_freq)
     ecgs.append(ecg)
     labels.append(False)
-
-# Rpeak_intervals
-for ecg in ecgs:
     Rpeak_intervals = preprocess.Rpeak_intervals(ecg, df.Time)
     Rpeak_intvs.append(Rpeak_intervals)
+
+# Rpeak_intervals
+# for ecg in ecgs:
+#     Rpeak_intervals = preprocess.Rpeak_intervals(ecg, df.Time)
+#     Rpeak_intvs.append(Rpeak_intervals)
 
 # for i, Rpeak_intv in enumerate(Rpeak_intvs):
 #     print(i, len(Rpeak_intv))
 
-clas = svm.SVC(kernel="linear")
+clas = svm.SVC(kernel="rbf")
 
 #10 fold cross validation svm, use full ecg (base)
 scores = cross_val_score(clas, ecgs, labels, cv=10)
@@ -65,7 +68,7 @@ print("Mean Accuracy:", mean_accuracy)
 
 
 #split ecg
-print("By ecg samples")
+print("\nBy ecg samples")
 sample_size = 37500 # 240 seconds
 ecg_samples = []
 sample_labels = []
@@ -100,7 +103,7 @@ print("Mean Accuracy:", mean_accuracy)
 
 
 #split Rpeak_intvs
-print("By Rpeak_intv samples")
+print("\nBy Rpeak_intv samples")
 sample_size = 100
 intv_samples = []
 sample_labels = []

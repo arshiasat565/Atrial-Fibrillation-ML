@@ -40,8 +40,8 @@ def decg_peaks(ecg, time):
      Output: Rwave peaks of d_ecg"""    
 def d_ecg_peaks(d_ecg, peaks_d_ecg, time, heightper, distanceper):
     meanpeaks_d_ecg = np.mean(d_ecg[peaks_d_ecg]) # find the mean of the peaks
-    max_d_ecg = np.max(d_ecg) #find max of the ecg signal
-    threshold = np.mean([meanpeaks_d_ecg,max_d_ecg])*heightper # find mean of meanpeakecg and maxecg - this will be a good threshold for finding peaks. it filters out all the peaks from the bottom
+    stdpeaks_d_ecg = np.std(d_ecg[peaks_d_ecg])
+    threshold = (meanpeaks_d_ecg+2*stdpeaks_d_ecg)*heightper # find mean of medianpeakecg and maxecg - this will be a good threshold for finding peaks. it filters out all the peaks from the bottom
     newpeaks_d_ecg,_ = sps.find_peaks(d_ecg, height = threshold) # find the new peaks
     # newpeaks_d_ecg_t = time[newpeaks_d_ecg]
     # newpeaks_d_ecg_t = newpeaks_d_ecg_t.reset_index(drop = True)
@@ -64,11 +64,11 @@ def d_ecg_peaks(d_ecg, peaks_d_ecg, time, heightper, distanceper):
     
 
     
-    """Step 3: this function finds the Rwave peaks at the original ecg signal
-    with the before defined peaks of the d_ecg signal
-    Input: ecg signal,derivative of ecg signal,
-        Rwave peaks of d_ecg from height_distance_threshold_peaks
-    Output: Rwave peaks"""
+"""Step 3: this function finds the Rwave peaks at the original ecg signal
+with the before defined peaks of the d_ecg signal
+Input: ecg signal,derivative of ecg signal,
+    Rwave peaks of d_ecg from height_distance_threshold_peaks
+Output: Rwave peaks"""
 def Rwave_peaks(ecg, d_ecg, Rwave_peaks_d_ecg, time):   
     if len(Rwave_peaks_d_ecg) > 1:
         Rwave = np.empty([len(Rwave_peaks_d_ecg)], np.int64)
