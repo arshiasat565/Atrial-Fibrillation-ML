@@ -69,7 +69,7 @@ print("Mean Accuracy:", mean_accuracy)
 
 #split ecg
 print("\nBy ecg samples")
-sample_size = 37500 # 240 seconds
+sample_size = 3125 # 20 seconds
 ecg_samples = []
 sample_labels = []
 
@@ -104,7 +104,7 @@ print("Mean Accuracy:", mean_accuracy)
 
 #split Rpeak_intvs
 print("\nBy Rpeak_intv samples")
-sample_size = 100
+sample_size = 25
 intv_samples = []
 sample_labels = []
 
