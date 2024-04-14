@@ -24,14 +24,14 @@ def bandpass(data: np.ndarray, edges: list[float], sample_rate: float, poles: in
     filtered_bp_data = sps.sosfiltfilt(sos, data)
     return filtered_bp_data
 
-def flatten_filter(ecg, min, max):
-    # ecg = lowpass(ecg, max, sample_rate)
-    # ecg = highpass(ecg, min, sample_rate)
+def flatten_filter(ppg, min, max):
+    # ppg = lowpass(ppg, max, sample_rate)
+    # ppg = highpass(ppg, min, sample_rate)
     # only use bandpass for filtering
-    ecg = bandpass(ecg, [min, max], sample_rate)
-    return ecg
+    ppg = bandpass(ppg, [min, max], sample_rate)
+    return ppg
 
-def interpolate(arr, start):
+def interpolate(arr):
     nan_indices = np.where(np.isnan(arr))[0]
     
     for idx in nan_indices:
@@ -39,27 +39,33 @@ def interpolate(arr, start):
         right_idx = idx + 1
 
         # find closest non-nans
-        while np.isnan(arr[start+left_idx]) and left_idx >= 0:
+        while left_idx >= 0 and np.isnan(arr[left_idx]):
             left_idx -= 1
-        while np.isnan(arr[start+right_idx]) and right_idx < start+len(arr):
+        while right_idx < len(arr) and np.isnan(arr[right_idx]):
             right_idx += 1
 
+        if left_idx < 0:
+            arr[0] = arr[right_idx]
+        if right_idx >= len(arr):
+            arr[len(arr)-1] = arr[left_idx]
+
         # interpolation
-        if left_idx >= 0 and right_idx < start+len(arr):
-            left_val = arr[start+left_idx]
-            right_val = arr[start+right_idx]
+        if left_idx >= 0 and right_idx < len(arr):
+            left_val = arr[left_idx]
+            right_val = arr[right_idx]
             slope = (right_val - left_val) / (right_idx - left_idx)
             for i in range(left_idx + 1, right_idx):
-                arr[start+i] = left_val + slope * (i - left_idx)
+                arr[i] = left_val + slope * (i - left_idx)
 
     return arr
 
 def interp_flat(df, start, min_freq, max_freq):
-    result = interpolate(df.ECG, start)
+    # result = df.PPG
+    result = interpolate(df.PPG)
     result = flatten_filter(result, min_freq, max_freq)
     
     # fig, ((ax1, ax2)) = plt.subplots(1, 2, figsize=(10, 3), sharex=True, sharey=True)
-    # ax1.plot(df.Time, df.ECG)
+    # ax1.plot(df.Time, df.PPG)
     # ax1.set_title("Original Signal")
     # ax1.margins(0, .1)
     # ax1.grid(alpha=.5, ls='--')

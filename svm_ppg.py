@@ -4,7 +4,7 @@ import scipy.signal as sps
 import matplotlib.pyplot as plt
 import glob
 import lab_funcs
-import preprocess
+import preprocess_ppg
 from sklearn import svm
 from sklearn.datasets import make_classification
 from sklearn.model_selection import KFold
@@ -34,18 +34,19 @@ length = 150000 # 20 mins
 # interpolate and bandpass ecgs
 for csv in af_csv:
     df = pd.read_csv(csv)
-    ecg = preprocess.interp_flat(df, 0, min_freq, max_freq)
+    ecg = preprocess_ppg.interp_flat(df, start, min_freq, max_freq)
     ecgs.append(ecg)
     labels.append(True)
-    Rpeak_intervals = preprocess.Rpeak_intervals(ecg, df.Time)
+    Rpeak_intervals = preprocess_ppg.Rpeak_intervals(ecg, df.Time)
     Rpeak_intvs.append(Rpeak_intervals)
 
 for csv in non_af_csv:
+    print(csv)
     df = pd.read_csv(csv)
-    ecg = preprocess.interp_flat(df, 0, min_freq, max_freq)
+    ecg = preprocess_ppg.interp_flat(df, start, min_freq, max_freq)
     ecgs.append(ecg)
     labels.append(False)
-    Rpeak_intervals = preprocess.Rpeak_intervals(ecg, df.Time)
+    Rpeak_intervals = preprocess_ppg.Rpeak_intervals(ecg, df.Time)
     Rpeak_intvs.append(Rpeak_intervals)
 
 # Rpeak_intervals
