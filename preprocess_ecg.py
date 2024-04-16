@@ -75,7 +75,7 @@ def interp_flat(df, start, min_freq, max_freq):
     # plt.show()
     return result
 
-# find intervals
+# find intervals using lab_funcs
 def Rpeak_intervals(ecg, time):
     d_ecg, peaks_d_ecg = lab_funcs.decg_peaks(ecg, time)
     filt_peaks = lab_funcs.d_ecg_peaks(d_ecg, peaks_d_ecg, time, 0.5, 0.5)

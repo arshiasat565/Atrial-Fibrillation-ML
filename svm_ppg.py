@@ -19,39 +19,40 @@ non_af_csv = glob.glob('mimic_perform_non_af_csv/*.csv')
 column_names = [
     "Time",
     "PPG",
-    "ECG",
+    "PPG",
     "resp"
 ]
 
-ecgs = []
+ppgs = []
 Rpeak_intvs = []
 labels = []
-min_freq = 5
-max_freq = 40
+min_freq = 0.5
+max_freq = 5
 start = 0
 length = 150000 # 20 mins
 
-# interpolate and bandpass ecgs
+# interpolate and bandpass ppgs
 for csv in af_csv:
+    print(csv)
     df = pd.read_csv(csv)
-    ecg = preprocess_ppg.interp_flat(df, start, min_freq, max_freq)
-    ecgs.append(ecg)
+    ppg = preprocess_ppg.interp_flat(df, start, min_freq, max_freq)
+    ppgs.append(ppg)
     labels.append(True)
-    Rpeak_intervals = preprocess_ppg.Rpeak_intervals(ecg, df.Time)
+    Rpeak_intervals = preprocess_ppg.Rpeak_intervals(ppg, df.Time)
     Rpeak_intvs.append(Rpeak_intervals)
 
 for csv in non_af_csv:
     print(csv)
     df = pd.read_csv(csv)
-    ecg = preprocess_ppg.interp_flat(df, start, min_freq, max_freq)
-    ecgs.append(ecg)
+    ppg = preprocess_ppg.interp_flat(df, start, min_freq, max_freq)
+    ppgs.append(ppg)
     labels.append(False)
-    Rpeak_intervals = preprocess_ppg.Rpeak_intervals(ecg, df.Time)
+    Rpeak_intervals = preprocess_ppg.Rpeak_intervals(ppg, df.Time)
     Rpeak_intvs.append(Rpeak_intervals)
 
 # Rpeak_intervals
-# for ecg in ecgs:
-#     Rpeak_intervals = preprocess.Rpeak_intervals(ecg, df.Time)
+# for ppg in ppgs:
+#     Rpeak_intervals = preprocess.Rpeak_intervals(ppg, df.Time)
 #     Rpeak_intvs.append(Rpeak_intervals)
 
 # for i, Rpeak_intv in enumerate(Rpeak_intvs):
@@ -59,8 +60,8 @@ for csv in non_af_csv:
 
 clas = svm.SVC(kernel="rbf")
 
-#10 fold cross validation svm, use full ecg (base)
-scores = cross_val_score(clas, ecgs, labels, cv=10)
+#10 fold cross validation svm, use full ppg (base)
+scores = cross_val_score(clas, ppgs, labels, cv=10)
 
 print("base Cross-Validation Scores:", scores)
 
@@ -68,25 +69,25 @@ mean_accuracy = np.mean(scores)
 print("Mean Accuracy:", mean_accuracy)
 
 
-#split ecg
-print("\nBy ecg samples")
+#split ppg
+print("\nBy ppg samples")
 sample_size = 3125 # 20 seconds
-ecg_samples = []
+ppg_samples = []
 sample_labels = []
 
-for i, ecg in enumerate(ecgs):
-    for j in range(0, len(ecg)-1, sample_size): # last signal removed
-        ecg_sample = ecg[j:j+sample_size]
-        # print(len(ecg_sample))
-        ecg_samples.append(ecg_sample)
+for i, ppg in enumerate(ppgs):
+    for j in range(0, len(ppg)-1, sample_size): # last signal removed
+        ppg_sample = ppg[j:j+sample_size]
+        # print(len(ppg_sample))
+        ppg_samples.append(ppg_sample)
         sample_labels.append(labels[i])
-print("sample count:", len(ecg_samples))
+print("sample count:", len(ppg_samples))
 
-# 10 fold cross validation svm, use ecg samples
+# 10 fold cross validation svm, use ppg samples
 # kfold
 kf = KFold(n_splits=10, shuffle=True)
 
-scores = cross_val_score(clas, ecg_samples, sample_labels, cv=kf)
+scores = cross_val_score(clas, ppg_samples, sample_labels, cv=kf)
 
 print("kf Cross-Validation Scores:", scores)
 
@@ -95,7 +96,7 @@ print("Mean Accuracy:", mean_accuracy)
 
 # shuffle
 shuffle_split = ShuffleSplit(n_splits=10)
-scores = cross_val_score(clas, ecg_samples, sample_labels, cv=shuffle_split)
+scores = cross_val_score(clas, ppg_samples, sample_labels, cv=shuffle_split)
 
 print("shuffle Cross-Validation Scores:", scores)
 
@@ -112,7 +113,7 @@ sample_labels = []
 for i, Rpeak_intv in enumerate(Rpeak_intvs):
     for j in range(0, len(Rpeak_intv), sample_size):
         intv_sample = Rpeak_intv[j:j+sample_size]
-        # print(len(ecg_sample))
+        # print(len(ppg_sample))
         if len(intv_sample) == sample_size:
             intv_samples.append(intv_sample)
             sample_labels.append(labels[i])

@@ -60,7 +60,6 @@ def interpolate(arr):
     return arr
 
 def interp_flat(df, start, min_freq, max_freq):
-    # result = df.PPG
     result = interpolate(df.PPG)
     result = flatten_filter(result, min_freq, max_freq)
     
@@ -77,33 +76,35 @@ def interp_flat(df, start, min_freq, max_freq):
     return result
 
 # find intervals
-def Rpeak_intervals(ecg, time):
-    d_ecg, peaks_d_ecg = lab_funcs.decg_peaks(ecg, time)
-    filt_peaks = lab_funcs.d_ecg_peaks(d_ecg, peaks_d_ecg, time, 0.5, 0.5)
-    Rpeaks = lab_funcs.Rwave_peaks(ecg, d_ecg, filt_peaks, time)
+#TODO: split into 30s segments first
+def Rpeak_intervals(ppg, time):
+    # Use PPG specific
+    d_ppg, peaks_d_ppg = lab_funcs.decg_peaks(ppg, time)
+    filt_peaks = lab_funcs.d_ecg_peaks(d_ppg, peaks_d_ppg, time, 0.5, 0.5)
+    Rpeaks = lab_funcs.Rwave_peaks(ppg, d_ppg, filt_peaks, time)
     Rwave_t_peaks = lab_funcs.Rwave_t_peaks(time, Rpeaks)
     Rpeak_intervals = np.diff(Rwave_t_peaks)
 
     # fig, ((ax2, ax3, ax4)) = plt.subplots(1, 3, figsize=(10, 3), sharex=True, sharey=True)
-    # ax2.plot(time[0:len(time)-1], d_ecg, color = 'red')
-    # ax2.plot(time[peaks_d_ecg], d_ecg[peaks_d_ecg], "x", color = 'g')
+    # ax2.plot(time[0:len(time)-1], d_ppg, color = 'red')
+    # ax2.plot(time[peaks_d_ppg], d_ppg[peaks_d_ppg], "x", color = 'g')
     # ax2.set_xlabel('Time [s]')
     # ax2.set_ylabel('Derivative of activation []')
-    # ax2.set_title('R-wave peaks step 1: peaks of derivative of ECG')
+    # ax2.set_title('R-wave peaks step 1: peaks of derivative of PPG')
     # ax2.grid(alpha=.1, ls='--')
-    # ax3.plot(time[0:len(time)-1], d_ecg, color = 'red') 
-    # ax3.plot(time[filt_peaks], d_ecg[filt_peaks], "x", color = 'g')
-    # ax3.set_title('R-wave peaks step 2: d_ECG peaks')
+    # ax3.plot(time[0:len(time)-1], d_ppg, color = 'red') 
+    # ax3.plot(time[filt_peaks], d_ppg[filt_peaks], "x", color = 'g')
+    # ax3.set_title('R-wave peaks step 2: d_PPG peaks')
     # ax3.set_ylabel('Derivative of activation []')
     # ax3.set_xlabel('Time [s]')
     # ax3.grid(alpha=.1, ls='--')
-    # ax4.plot(time[0:len(time)-1], d_ecg, color = 'r', label = 'Derivative of ECG')
-    # ax4.plot(time[filt_peaks], d_ecg[filt_peaks], "x", color = 'g')
+    # ax4.plot(time[0:len(time)-1], d_ppg, color = 'r', label = 'Derivative of PPG')
+    # ax4.plot(time[filt_peaks], d_ppg[filt_peaks], "x", color = 'g')
     # ax4.set_ylabel('Activation Derivative []')
     # ax4.set_xlabel('Time [s]') 
     # ax4.set_title('R-wave peaks step 3: R-wave peaks')
-    # ax4.plot(time, ecg, color = 'b', label = 'ECG')
-    # ax4.plot(time[Rpeaks], ecg[Rpeaks], "x", color = 'y')
+    # ax4.plot(time, ppg, color = 'b', label = 'PPG')
+    # ax4.plot(time[Rpeaks], ppg[Rpeaks], "x", color = 'y')
     # ax4.set_ylabel('Activation []')
     # ax4.grid(alpha=.1, ls='--')
     # plt.tight_layout()
@@ -116,15 +117,15 @@ def Rpeak_intervals(ecg, time):
     
     return Rpeak_intervals
 
-def fft(ecg):
+def fft(ppg):
     # Compute the FFT
-    fft_result = np.fft.fft(ecg)
+    fft_result = np.fft.fft(ppg)
     frequencies = np.fft.fftfreq(len(fft_result), 1/1000)  # Assuming a sampling frequency of 1000 Hz
 
     # Plot the magnitude spectrum
     plt.figure(figsize=(10, 6))
     plt.plot(frequencies, np.abs(fft_result))
-    plt.title('FFT of Filtered ECG Signal')
+    plt.title('FFT of Filtered PPG Signal')
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('Magnitude')
     plt.show()
@@ -136,8 +137,8 @@ def fft(ecg):
 # df = pd.read_csv('mimic_perform_non_af_csv/mimic_perform_non_af_001_data.csv')
 # print(df.shape)
 
-# plt.plot(df.Time, df.ECG)
-# plt.title('Normal ECG segment')
+# plt.plot(df.Time, df.PPG)
+# plt.title('Normal PPG segment')
 # plt.ylabel('Amplitude (mV)')
 # plt.xlabel('Time [s]')
 # plt.show()
@@ -152,8 +153,8 @@ def fft(ecg):
 # orig = df[:n]
 # print(orig.shape)
 
-# flat_filt_ecg = interp_flat(orig, 0, min_freq, max_freq)
+# flat_filt_ppg = interp_flat(orig, 0, min_freq, max_freq)
 
-# Rpeak_intervals(flat_filt_ecg, orig.Time)
+# Rpeak_intervals(flat_filt_ppg, orig.Time)
 
-# fft(flat_filt_ecg)
+# fft(flat_filt_ppg)

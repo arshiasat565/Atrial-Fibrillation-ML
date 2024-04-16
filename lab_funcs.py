@@ -41,7 +41,7 @@ def decg_peaks(ecg, time):
 def d_ecg_peaks(d_ecg, peaks_d_ecg, time, heightper, distanceper):
     meanpeaks_d_ecg = np.mean(d_ecg[peaks_d_ecg]) # find the mean of the peaks
     stdpeaks_d_ecg = np.std(d_ecg[peaks_d_ecg])
-    threshold = (meanpeaks_d_ecg+2*stdpeaks_d_ecg)*heightper # find mean of medianpeakecg and maxecg - this will be a good threshold for finding peaks. it filters out all the peaks from the bottom
+    threshold = (meanpeaks_d_ecg+2*stdpeaks_d_ecg)*heightper #IMPROVE use mean + 2 standard deviations for finding peaks. it filters out all the peaks from the bottom and those too short to be an R peak
     newpeaks_d_ecg,_ = sps.find_peaks(d_ecg, height = threshold) # find the new peaks
     # newpeaks_d_ecg_t = time[newpeaks_d_ecg]
     # newpeaks_d_ecg_t = newpeaks_d_ecg_t.reset_index(drop = True)
