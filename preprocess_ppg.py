@@ -59,31 +59,43 @@ def interpolate(arr):
 
     return arr
 
-def interp_flat(df, start, min_freq, max_freq):
+def interp_flat(df, length, min_freq, max_freq):
+    ppg_segments = []
+    time_segments = []
     result = interpolate(df.PPG)
-    result = flatten_filter(result, min_freq, max_freq)
+    #split into 30s segments (ignore signal at 0)
+    for i in range(1, len(result), length):
+        ppg_segment = result[i:i+length]
+        time_segment = df.Time[i:i+length]
+        flatten_ppg = flatten_filter(ppg_segment, min_freq, max_freq)
+        ppg_segments.append(flatten_ppg)
+        time_segments.append(time_segment)
     
-    # fig, ((ax1, ax2)) = plt.subplots(1, 2, figsize=(10, 3), sharex=True, sharey=True)
-    # ax1.plot(df.Time, df.PPG)
-    # ax1.set_title("Original Signal")
-    # ax1.margins(0, .1)
-    # ax1.grid(alpha=.5, ls='--')
-    # ax2.plot(df.Time, result)
-    # ax2.set_title("After Signal")
-    # ax1.margins(0, .1)
-    # ax2.grid(alpha=.5, ls='--')
-    # plt.show()
-    return result
+        # fig, ((ax1, ax2)) = plt.subplots(1, 2, figsize=(10, 3), sharex=True, sharey=True)
+        # ax1.plot(time_segment, ppg_segment)
+        # ax1.set_title("Original Signal")
+        # ax1.margins(0, .1)
+        # ax1.grid(alpha=.5, ls='--')
+        # ax2.plot(time_segment, flatten_ppg)
+        # ax2.set_title("After Signal")
+        # ax1.margins(0, .1)
+        # ax2.grid(alpha=.5, ls='--')
+        # plt.show()
+
+    return ppg_segments, time_segments
 
 # find intervals
-#TODO: split into 30s segments first
-def Rpeak_intervals(ppg, time):
-    # Use PPG specific
-    d_ppg, peaks_d_ppg = lab_funcs.decg_peaks(ppg, time)
-    filt_peaks = lab_funcs.d_ecg_peaks(d_ppg, peaks_d_ppg, time, 0.5, 0.5)
-    Rpeaks = lab_funcs.Rwave_peaks(ppg, d_ppg, filt_peaks, time)
-    Rwave_t_peaks = lab_funcs.Rwave_t_peaks(time, Rpeaks)
-    Rpeak_intervals = np.diff(Rwave_t_peaks)
+def Rpeak_intervals(ppgs, times):
+    #TODO: Use PPG specific
+    Rpeak_intervals = []
+    for ppg, time in zip(ppgs, times):
+        d_ppg, peaks_d_ppg = lab_funcs.decg_peaks(ppg, time)
+        filt_peaks = lab_funcs.d_ecg_peaks(d_ppg, peaks_d_ppg, time, 0.5, 0.5)
+        Rpeaks = lab_funcs.Rwave_peaks(ppg, d_ppg, filt_peaks, time)
+        # Rwave_t_peaks = lab_funcs.Rwave_t_peaks(time, Rpeaks)
+        Rpeak_diff = np.diff(Rpeaks)
+        Rpeak_intervals = np.concatenate((Rpeak_intervals, Rpeak_diff))
+
 
     # fig, ((ax2, ax3, ax4)) = plt.subplots(1, 3, figsize=(10, 3), sharex=True, sharey=True)
     # ax2.plot(time[0:len(time)-1], d_ppg, color = 'red')

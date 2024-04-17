@@ -24,31 +24,39 @@ column_names = [
 ]
 
 ppgs = []
+times = []
 Rpeak_intvs = []
-labels = []
+segment_labels = []
+interval_labels = []
 min_freq = 0.5
 max_freq = 5
 start = 0
-length = 150000 # 20 mins
+length = 3750 # 30 secs
 
 # interpolate and bandpass ppgs
 for csv in af_csv:
     print(csv)
     df = pd.read_csv(csv)
-    ppg = preprocess_ppg.interp_flat(df, start, min_freq, max_freq)
-    ppgs.append(ppg)
-    labels.append(True)
-    Rpeak_intervals = preprocess_ppg.Rpeak_intervals(ppg, df.Time)
+    ppg_segments, time_segments = preprocess_ppg.interp_flat(df, length, min_freq, max_freq)
+    for ppg_segment, time_segment in zip(ppg_segments, time_segments):
+        ppgs.append(ppg_segment)
+        times.append(time_segment)
+        segment_labels.append(True)
+    Rpeak_intervals = preprocess_ppg.Rpeak_intervals(ppg_segments, time_segments)
     Rpeak_intvs.append(Rpeak_intervals)
+    interval_labels.append(True)
 
 for csv in non_af_csv:
     print(csv)
     df = pd.read_csv(csv)
-    ppg = preprocess_ppg.interp_flat(df, start, min_freq, max_freq)
-    ppgs.append(ppg)
-    labels.append(False)
-    Rpeak_intervals = preprocess_ppg.Rpeak_intervals(ppg, df.Time)
+    ppg_segments, time_segments = preprocess_ppg.interp_flat(df, length, min_freq, max_freq)
+    for ppg_segment, time_segment in zip(ppg_segments, time_segments):
+        ppgs.append(ppg_segment)
+        times.append(time_segment)
+        segment_labels.append(False)
+    Rpeak_intervals = preprocess_ppg.Rpeak_intervals(ppg_segments, time_segments)
     Rpeak_intvs.append(Rpeak_intervals)
+    interval_labels.append(False)
 
 # Rpeak_intervals
 # for ppg in ppgs:
@@ -60,34 +68,24 @@ for csv in non_af_csv:
 
 clas = svm.SVC(kernel="rbf")
 
-#10 fold cross validation svm, use full ppg (base)
-scores = cross_val_score(clas, ppgs, labels, cv=10)
+# #10 fold cross validation svm, use full ppg (base)
+# scores = cross_val_score(clas, ppgs, labels, cv=10)
 
-print("base Cross-Validation Scores:", scores)
+# print("base Cross-Validation Scores:", scores)
 
-mean_accuracy = np.mean(scores)
-print("Mean Accuracy:", mean_accuracy)
+# mean_accuracy = np.mean(scores)
+# print("Mean Accuracy:", mean_accuracy)
 
 
-#split ppg
+# split ppg
 print("\nBy ppg samples")
-sample_size = 3125 # 20 seconds
-ppg_samples = []
-sample_labels = []
-
-for i, ppg in enumerate(ppgs):
-    for j in range(0, len(ppg)-1, sample_size): # last signal removed
-        ppg_sample = ppg[j:j+sample_size]
-        # print(len(ppg_sample))
-        ppg_samples.append(ppg_sample)
-        sample_labels.append(labels[i])
-print("sample count:", len(ppg_samples))
+print("sample count:", len(ppgs))
 
 # 10 fold cross validation svm, use ppg samples
 # kfold
 kf = KFold(n_splits=10, shuffle=True)
 
-scores = cross_val_score(clas, ppg_samples, sample_labels, cv=kf)
+scores = cross_val_score(clas, ppgs, segment_labels, cv=kf)
 
 print("kf Cross-Validation Scores:", scores)
 
@@ -96,7 +94,7 @@ print("Mean Accuracy:", mean_accuracy)
 
 # shuffle
 shuffle_split = ShuffleSplit(n_splits=10)
-scores = cross_val_score(clas, ppg_samples, sample_labels, cv=shuffle_split)
+scores = cross_val_score(clas, ppgs, segment_labels, cv=shuffle_split)
 
 print("shuffle Cross-Validation Scores:", scores)
 
@@ -106,23 +104,22 @@ print("Mean Accuracy:", mean_accuracy)
 
 #split Rpeak_intvs
 print("\nBy Rpeak_intv samples")
-sample_size = 25
+sample_size = 10
 intv_samples = []
 sample_labels = []
 
+#TODO: Add Padding
 for i, Rpeak_intv in enumerate(Rpeak_intvs):
     for j in range(0, len(Rpeak_intv), sample_size):
         intv_sample = Rpeak_intv[j:j+sample_size]
-        # print(len(ppg_sample))
         if len(intv_sample) == sample_size:
             intv_samples.append(intv_sample)
-            sample_labels.append(labels[i])
+            sample_labels.append(interval_labels[i])
 print("sample count:", len(intv_samples))
 
 # 10 fold cross validation svm, use Rpeak_intv samples
 # kfold
 kf = KFold(n_splits=10, shuffle=True)
-
 scores = cross_val_score(clas, intv_samples, sample_labels, cv=kf)
 
 print("kf Cross-Validation Scores:", scores)
