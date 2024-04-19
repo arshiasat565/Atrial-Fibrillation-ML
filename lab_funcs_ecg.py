@@ -38,10 +38,10 @@ def decg_peaks(ecg, time):
      Input: d_ecg signal, position of peaks from decg_peaks(), time, 
          height threshold percentage in decimal, distance threshold in decimal
      Output: Rwave peaks of d_ecg"""    
-def d_ecg_peaks(d_ecg, peaks_d_ecg, time, heightper, distanceper):
+def d_ecg_peaks(d_ecg, peaks_d_ecg, std_threshold, time, heightper, distanceper):
     meanpeaks_d_ecg = np.mean(d_ecg[peaks_d_ecg]) # find the mean of the peaks
     stdpeaks_d_ecg = np.std(d_ecg[peaks_d_ecg])
-    threshold = (meanpeaks_d_ecg+2*stdpeaks_d_ecg)*heightper #IMPROVE use mean + 2 standard deviations for finding peaks. it filters out all the peaks from the bottom and those too short to be an R peak
+    threshold = (meanpeaks_d_ecg+std_threshold*stdpeaks_d_ecg)*heightper #IMPROVE use mean + n standard deviations for finding peaks. it filters out all the peaks from the bottom and those too short to be an R peak
     newpeaks_d_ecg,_ = sps.find_peaks(d_ecg, height = threshold) # find the new peaks
     # newpeaks_d_ecg_t = time[newpeaks_d_ecg]
     # newpeaks_d_ecg_t = newpeaks_d_ecg_t.reset_index(drop = True)
@@ -60,7 +60,7 @@ def d_ecg_peaks(d_ecg, peaks_d_ecg, time, heightper, distanceper):
     # plt.xlabel('Time [s]')
     # plt.legend()
     # plt.show()
-    return Rwave_peaks_d_ecg
+    return Rwave_peaks_d_ecg, threshold
     
 
     

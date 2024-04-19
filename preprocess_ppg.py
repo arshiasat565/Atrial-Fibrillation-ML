@@ -5,7 +5,7 @@ import numpy as np
 import scipy.signal as sps
 import matplotlib.pyplot as plt
 import glob
-import lab_funcs
+import lab_funcs_ppg
 
 sample_rate = 120
 
@@ -89,38 +89,41 @@ def Rpeak_intervals(ppgs, times):
     #TODO: Use PPG specific
     Rpeak_intervals = []
     for ppg, time in zip(ppgs, times):
-        d_ppg, peaks_d_ppg = lab_funcs.decg_peaks(ppg, time)
-        filt_peaks = lab_funcs.d_ecg_peaks(d_ppg, peaks_d_ppg, time, 0.5, 0.5)
-        Rpeaks = lab_funcs.Rwave_peaks(ppg, d_ppg, filt_peaks, time)
+        time = time.values
+        d_ppg, peaks_d_ppg = lab_funcs_ppg.dppg_peaks(ppg, time)
+        filt_peaks, threshold = lab_funcs_ppg.d_ppg_peaks(d_ppg, peaks_d_ppg, 0, time, 0.5, 0.5)
+        Rpeaks = lab_funcs_ppg.Rwave_peaks(ppg, d_ppg, filt_peaks, time)
         # Rwave_t_peaks = lab_funcs.Rwave_t_peaks(time, Rpeaks)
         Rpeak_diff = np.diff(Rpeaks)
         Rpeak_intervals = np.concatenate((Rpeak_intervals, Rpeak_diff))
 
 
-    # fig, ((ax2, ax3, ax4)) = plt.subplots(1, 3, figsize=(10, 3), sharex=True, sharey=True)
-    # ax2.plot(time[0:len(time)-1], d_ppg, color = 'red')
-    # ax2.plot(time[peaks_d_ppg], d_ppg[peaks_d_ppg], "x", color = 'g')
-    # ax2.set_xlabel('Time [s]')
-    # ax2.set_ylabel('Derivative of activation []')
-    # ax2.set_title('R-wave peaks step 1: peaks of derivative of PPG')
-    # ax2.grid(alpha=.1, ls='--')
-    # ax3.plot(time[0:len(time)-1], d_ppg, color = 'red') 
-    # ax3.plot(time[filt_peaks], d_ppg[filt_peaks], "x", color = 'g')
-    # ax3.set_title('R-wave peaks step 2: d_PPG peaks')
-    # ax3.set_ylabel('Derivative of activation []')
-    # ax3.set_xlabel('Time [s]')
-    # ax3.grid(alpha=.1, ls='--')
-    # ax4.plot(time[0:len(time)-1], d_ppg, color = 'r', label = 'Derivative of PPG')
-    # ax4.plot(time[filt_peaks], d_ppg[filt_peaks], "x", color = 'g')
-    # ax4.set_ylabel('Activation Derivative []')
-    # ax4.set_xlabel('Time [s]') 
-    # ax4.set_title('R-wave peaks step 3: R-wave peaks')
-    # ax4.plot(time, ppg, color = 'b', label = 'PPG')
-    # ax4.plot(time[Rpeaks], ppg[Rpeaks], "x", color = 'y')
-    # ax4.set_ylabel('Activation []')
-    # ax4.grid(alpha=.1, ls='--')
-    # plt.tight_layout()
-    # plt.show()
+        # fig, ((ax2, ax3, ax4)) = plt.subplots(1, 3, figsize=(10, 3), sharex=True, sharey=True)
+        # fig, ((ax3)) = plt.subplots(1, 1, figsize=(10, 3), sharex=True, sharey=True)
+        # ax2.plot(time[0:len(time)-1], d_ppg, color = 'red')
+        # ax2.plot(time[peaks_d_ppg], d_ppg[peaks_d_ppg], "x", color = 'g')
+        # ax2.set_xlabel('Time [s]')
+        # ax2.set_ylabel('Derivative of activation []')
+        # ax2.set_title('R-wave peaks step 1: peaks of derivative of PPG')
+        # ax2.grid(alpha=.1, ls='--')
+        # ax3.plot(time[0:len(time)-1], d_ppg, color = 'red') 
+        # ax3.plot(time[filt_peaks], d_ppg[filt_peaks], "x", color = 'g')
+        # ax3.axhline(threshold, color = 'black', label = 'threshold')
+        # ax3.set_title('R-wave peaks step 2: d_PPG peaks')
+        # ax3.set_ylabel('Derivative of activation []')
+        # ax3.set_xlabel('Time [s]')
+        # ax3.grid(alpha=.1, ls='--')
+        # ax4.plot(time[0:len(time)-1], d_ppg, color = 'r', label = 'Derivative of PPG')
+        # ax4.plot(time[filt_peaks], d_ppg[filt_peaks], "x", color = 'g')
+        # ax4.set_ylabel('Activation Derivative []')
+        # ax4.set_xlabel('Time [s]') 
+        # ax4.set_title('R-wave peaks step 3: R-wave peaks')
+        # ax4.plot(time, ppg, color = 'b', label = 'PPG')
+        # ax4.plot(time[Rpeaks], ppg[Rpeaks], "x", color = 'y')
+        # ax4.set_ylabel('Activation []')
+        # ax4.grid(alpha=.1, ls='--')
+        # plt.tight_layout()
+        # plt.show()
 
     # avg_intv = np.mean(Rpeak_intervals)
     # min_intv = np.min(Rpeak_intervals)

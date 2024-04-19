@@ -3,7 +3,7 @@ import numpy as np
 import scipy.signal as sps
 import matplotlib.pyplot as plt
 import glob
-import lab_funcs
+import lab_funcs_ecg
 import preprocess_ecg
 from sklearn import svm
 from sklearn.datasets import make_classification

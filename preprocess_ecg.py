@@ -5,7 +5,7 @@ import numpy as np
 import scipy.signal as sps
 import matplotlib.pyplot as plt
 import glob
-import lab_funcs
+import lab_funcs_ecg
 
 sample_rate = 120
 
@@ -77,10 +77,10 @@ def interp_flat(df, start, min_freq, max_freq):
 
 # find intervals using lab_funcs
 def Rpeak_intervals(ecg, time):
-    d_ecg, peaks_d_ecg = lab_funcs.decg_peaks(ecg, time)
-    filt_peaks = lab_funcs.d_ecg_peaks(d_ecg, peaks_d_ecg, time, 0.5, 0.5)
-    Rpeaks = lab_funcs.Rwave_peaks(ecg, d_ecg, filt_peaks, time)
-    Rwave_t_peaks = lab_funcs.Rwave_t_peaks(time, Rpeaks)
+    d_ecg, peaks_d_ecg = lab_funcs_ecg.decg_peaks(ecg, time)
+    filt_peaks, threshold = lab_funcs_ecg.d_ecg_peaks(d_ecg, peaks_d_ecg, 2, time, 0.5, 0.5)
+    Rpeaks = lab_funcs_ecg.Rwave_peaks(ecg, d_ecg, filt_peaks, time)
+    Rwave_t_peaks = lab_funcs_ecg.Rwave_t_peaks(time, Rpeaks)
     Rpeak_intervals = np.diff(Rwave_t_peaks)
 
     # fig, ((ax2, ax3, ax4)) = plt.subplots(1, 3, figsize=(10, 3), sharex=True, sharey=True)
@@ -92,6 +92,7 @@ def Rpeak_intervals(ecg, time):
     # ax2.grid(alpha=.1, ls='--')
     # ax3.plot(time[0:len(time)-1], d_ecg, color = 'red') 
     # ax3.plot(time[filt_peaks], d_ecg[filt_peaks], "x", color = 'g')
+    # ax3.axhline(threshold, color = 'black', label = 'threshold')
     # ax3.set_title('R-wave peaks step 2: d_ECG peaks')
     # ax3.set_ylabel('Derivative of activation []')
     # ax3.set_xlabel('Time [s]')

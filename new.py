@@ -3,7 +3,7 @@ import numpy as np
 import scipy.signal as sps
 import matplotlib.pyplot as plt
 import glob
-import lab_funcs
+import lab_funcs_ecg
 import preprocess_ecg
 import scipy.io.wavfile
 

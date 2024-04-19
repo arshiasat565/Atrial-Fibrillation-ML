@@ -3,7 +3,7 @@ import numpy as np
 import scipy.signal as sps
 import matplotlib.pyplot as plt
 import glob
-import lab_funcs
+import lab_funcs_ppg
 import preprocess_ppg
 from sklearn import svm
 from sklearn.datasets import make_classification
@@ -35,7 +35,7 @@ length = 3750 # 30 secs
 
 # interpolate and bandpass ppgs
 for csv in af_csv:
-    print(csv)
+    # print(csv)
     df = pd.read_csv(csv)
     ppg_segments, time_segments = preprocess_ppg.interp_flat(df, length, min_freq, max_freq)
     for ppg_segment, time_segment in zip(ppg_segments, time_segments):
@@ -47,7 +47,7 @@ for csv in af_csv:
     interval_labels.append(True)
 
 for csv in non_af_csv:
-    print(csv)
+    # print(csv)
     df = pd.read_csv(csv)
     ppg_segments, time_segments = preprocess_ppg.interp_flat(df, length, min_freq, max_freq)
     for ppg_segment, time_segment in zip(ppg_segments, time_segments):
