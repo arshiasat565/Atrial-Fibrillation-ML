@@ -173,3 +173,46 @@ def fft(ppg):
 # Rpeak_intervals(flat_filt_ppg, orig.Time)
 
 # fft(flat_filt_ppg)
+
+def data_init(min_freq, max_freq, length, start = 0):
+
+    af_csv = glob.glob('mimic_perform_af_csv/*.csv')
+    non_af_csv = glob.glob('mimic_perform_non_af_csv/*.csv')
+
+    column_names = [
+        "Time",
+        "PPG",
+        "PPG",
+        "resp"
+    ]
+
+    ppgs = []
+    times = []
+    Rpeak_intvs = []
+    segment_labels = []
+    interval_labels = []
+
+    # interpolate and bandpass ppgs
+    for csv in af_csv:
+        # print(csv)
+        df = pd.read_csv(csv)
+        ppg_segments, time_segments = interp_flat(df, length, min_freq, max_freq)
+        for ppg_segment, time_segment in zip(ppg_segments, time_segments):
+            ppgs.append(ppg_segment)
+            times.append(time_segment)
+            segment_labels.append(True)
+        Rpeak_intvs.append(Rpeak_intervals(ppg_segments, time_segments))
+        interval_labels.append(True)
+
+    for csv in non_af_csv:
+        # print(csv)
+        df = pd.read_csv(csv)
+        ppg_segments, time_segments = interp_flat(df, length, min_freq, max_freq)
+        for ppg_segment, time_segment in zip(ppg_segments, time_segments):
+            ppgs.append(ppg_segment)
+            times.append(time_segment)
+            segment_labels.append(False)
+        Rpeak_intvs.append(Rpeak_intervals(ppg_segments, time_segments))
+        interval_labels.append(False)
+
+    return ppgs, times, Rpeak_intvs, segment_labels, interval_labels

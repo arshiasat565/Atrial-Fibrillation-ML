@@ -157,3 +157,36 @@ def fft(ecg):
 # Rpeak_intervals(flat_filt_ecg, orig.Time)
 
 # fft(flat_filt_ecg)
+
+def data_init(min_freq, max_freq, length, start = 0):
+
+    af_csv = glob.glob('mimic_perform_af_csv/*.csv')
+    non_af_csv = glob.glob('mimic_perform_non_af_csv/*.csv')
+
+    column_names = [
+        "Time",
+        "PPG",
+        "ECG",
+        "resp"
+    ]
+
+    ecgs = []
+    Rpeak_intvs = []
+    labels = []
+
+    # interpolate and bandpass ecgs
+    for csv in af_csv:
+        df = pd.read_csv(csv)
+        ecg = interp_flat(df, start, min_freq, max_freq)
+        ecgs.append(ecg)
+        labels.append(True)
+        Rpeak_intvs.append(Rpeak_intervals(ecg, df.Time))
+
+    for csv in non_af_csv:
+        df = pd.read_csv(csv)
+        ecg = interp_flat(df, start, min_freq, max_freq)
+        ecgs.append(ecg)
+        labels.append(False)
+        Rpeak_intvs.append(Rpeak_intervals(ecg, df.Time))
+        
+    return ecgs, Rpeak_intvs, labels

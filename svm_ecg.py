@@ -9,69 +9,44 @@ from sklearn import svm
 from sklearn.datasets import make_classification
 from sklearn.model_selection import KFold
 from sklearn.model_selection import ShuffleSplit
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_score, cross_validate
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 
-af_csv = glob.glob('mimic_perform_af_csv/*.csv')
-non_af_csv = glob.glob('mimic_perform_non_af_csv/*.csv')
+scoring = {
+    'accuracy': make_scorer(accuracy_score),
+    'precision': make_scorer(precision_score),
+    'recall': make_scorer(recall_score),
+    'f1': make_scorer(f1_score),
+    'roc_auc': make_scorer(roc_auc_score)
+}
+show_training = False
 
-column_names = [
-    "Time",
-    "PPG",
-    "ECG",
-    "resp"
-]
-
-ecgs = []
-Rpeak_intvs = []
-labels = []
 min_freq = 5
 max_freq = 40
 start = 0
 length = 150000 # 20 mins
 
-# interpolate and bandpass ecgs
-for csv in af_csv:
-    df = pd.read_csv(csv)
-    ecg = preprocess_ecg.interp_flat(df, start, min_freq, max_freq)
-    ecgs.append(ecg)
-    labels.append(True)
-    Rpeak_intervals = preprocess_ecg.Rpeak_intervals(ecg, df.Time)
-    Rpeak_intvs.append(Rpeak_intervals)
+ecgs, Rpeak_intvs, labels = preprocess_ecg.data_init(min_freq, max_freq, length)
 
-for csv in non_af_csv:
-    df = pd.read_csv(csv)
-    ecg = preprocess_ecg.interp_flat(df, start, min_freq, max_freq)
-    ecgs.append(ecg)
-    labels.append(False)
-    Rpeak_intervals = preprocess_ecg.Rpeak_intervals(ecg, df.Time)
-    Rpeak_intvs.append(Rpeak_intervals)
-
-# Rpeak_intervals
-# for ecg in ecgs:
-#     Rpeak_intervals = preprocess.Rpeak_intervals(ecg, df.Time)
-#     Rpeak_intvs.append(Rpeak_intervals)
-
-# for i, Rpeak_intv in enumerate(Rpeak_intvs):
-#     print(i, len(Rpeak_intv))
-
-clas = svm.SVC(kernel="rbf")
+clas = svm.SVC(kernel="rbf", probability=True)
 
 #10 fold cross validation svm, use full ecg (base)
 scores = cross_val_score(clas, ecgs, labels, cv=10)
 
-print("base Cross-Validation Scores:", scores)
-
-mean_accuracy = np.mean(scores)
-print("Mean Accuracy:", mean_accuracy)
+print("base Cross-Validation:")
+scores = cross_validate(clas, ecgs, labels, cv=10, scoring=scoring, return_train_score=show_training)
+for metric_name, score in list(scores.items())[2:]:
+    # print(score)
+    print(f"Mean {metric_name}: {score.mean()} (±{score.std()})")
 
 
 #split ecg
-print("\nBy ecg samples")
-sample_size = 3125 # 20 seconds
+sample_size = 3750 # 30 seconds
 ecg_samples = []
 sample_labels = []
+sample_size_sec = sample_size / 125
+print(f"\nBy {sample_size_sec}s ecg samples")
 
 for i, ecg in enumerate(ecgs):
     for j in range(0, len(ecg)-1, sample_size): # last signal removed
@@ -84,22 +59,19 @@ print("sample count:", len(ecg_samples))
 # 10 fold cross validation svm, use ecg samples
 # kfold
 kf = KFold(n_splits=10, shuffle=True)
-
-scores = cross_val_score(clas, ecg_samples, sample_labels, cv=kf)
-
-print("kf Cross-Validation Scores:", scores)
-
-mean_accuracy = np.mean(scores)
-print("Mean Accuracy:", mean_accuracy)
+print("kf Cross-Validation:")
+scores = cross_validate(clas, ecg_samples, sample_labels, cv=kf, scoring=scoring, return_train_score=show_training)
+for metric_name, score in list(scores.items())[2:]:
+    # print(score)
+    print(f"Mean {metric_name}: {score.mean()} (±{score.std()})")
 
 # shuffle
 shuffle_split = ShuffleSplit(n_splits=10)
-scores = cross_val_score(clas, ecg_samples, sample_labels, cv=shuffle_split)
-
-print("shuffle Cross-Validation Scores:", scores)
-
-mean_accuracy = np.mean(scores)
-print("Mean Accuracy:", mean_accuracy)
+print("shuffle Cross-Validation:")
+scores = cross_validate(clas, ecg_samples, sample_labels, cv=shuffle_split, scoring=scoring, return_train_score=show_training)
+for metric_name, score in list(scores.items())[2:]:
+    # print(score)
+    print(f"Mean {metric_name}: {score.mean()} (±{score.std()})")
 
 
 #split Rpeak_intvs
@@ -120,19 +92,16 @@ print("sample count:", len(intv_samples))
 # 10 fold cross validation svm, use Rpeak_intv samples
 # kfold
 kf = KFold(n_splits=10, shuffle=True)
-
-scores = cross_val_score(clas, intv_samples, sample_labels, cv=kf)
-
-print("kf Cross-Validation Scores:", scores)
-
-mean_accuracy = np.mean(scores)
-print("Mean Accuracy:", mean_accuracy)
+print("kf Cross-Validation:")
+scores = cross_validate(clas, intv_samples, sample_labels, cv=kf, scoring=scoring, return_train_score=show_training)
+for metric_name, score in list(scores.items())[2:]:
+    # print(score)
+    print(f"Mean {metric_name}: {score.mean()} (±{score.std()})")
 
 # shuffle
 shuffle_split = ShuffleSplit(n_splits=10)
-scores = cross_val_score(clas, intv_samples, sample_labels, cv=shuffle_split)
-
-print("shuffle Cross-Validation Scores:", scores)
-
-mean_accuracy = np.mean(scores)
-print("Mean Accuracy:", mean_accuracy)
+print("shuffle Cross-Validation:")
+scores = cross_validate(clas, intv_samples, sample_labels, cv=shuffle_split, scoring=scoring, return_train_score=show_training)
+for metric_name, score in list(scores.items())[2:]:
+    # print(score)
+    print(f"Mean {metric_name}: {score.mean()} (±{score.std()})")
