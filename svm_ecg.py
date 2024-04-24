@@ -27,51 +27,45 @@ max_freq = 40
 start = 0
 length = 150000 # 20 mins
 
+def cross_val(clas, ecgs, labels, cv, scoring, return_train_score):
+    print(f"{cv} Cross-Validation:")
+    scores = cross_validate(clas, ecgs, labels, cv=cv, scoring=scoring, return_train_score=return_train_score)
+    score_list = list(scores.items())[2:]
+    for metric_name, score in score_list:
+        print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
+
+
 ecgs, Rpeak_intvs, labels = preprocess_ecg.data_init(min_freq, max_freq, length)
 
-clas = svm.SVC(kernel="rbf", probability=True)
+# clas = svm.SVC(kernel="rbf", probability=True)
 
-#10 fold cross validation svm, use full ecg (base)
-scores = cross_val_score(clas, ecgs, labels, cv=10)
-
-print("base Cross-Validation:")
-scores = cross_validate(clas, ecgs, labels, cv=10, scoring=scoring, return_train_score=show_training)
-for metric_name, score in list(scores.items())[2:]:
-    # print(score)
-    print(f"Mean {metric_name}: {score.mean()} (±{score.std()})")
+# #10 fold cross validation svm, use full ecg (base)
+# cross_val(clas, ecgs, labels, 10, scoring, show_training)
 
 
-#split ecg
-sample_size = 3750 # 30 seconds
-ecg_samples = []
-sample_labels = []
-sample_size_sec = sample_size / 125
-print(f"\nBy {sample_size_sec}s ecg samples")
+# #split ecg
+# sample_size = 3750 # 30 seconds
+# ecg_samples = []
+# sample_labels = []
+# sample_size_sec = sample_size / 125
+# print(f"\nBy {sample_size_sec}s ecg samples")
 
-for i, ecg in enumerate(ecgs):
-    for j in range(0, len(ecg)-1, sample_size): # last signal removed
-        ecg_sample = ecg[j:j+sample_size]
-        # print(len(ecg_sample))
-        ecg_samples.append(ecg_sample)
-        sample_labels.append(labels[i])
-print("sample count:", len(ecg_samples))
+# for i, ecg in enumerate(ecgs):
+#     for j in range(0, len(ecg)-1, sample_size): # last signal removed
+#         ecg_sample = ecg[j:j+sample_size]
+#         # print(len(ecg_sample))
+#         ecg_samples.append(ecg_sample)
+#         sample_labels.append(labels[i])
+# print("sample count:", len(ecg_samples))
 
 # 10 fold cross validation svm, use ecg samples
-# kfold
-kf = KFold(n_splits=10, shuffle=True)
-print("kf Cross-Validation:")
-scores = cross_validate(clas, ecg_samples, sample_labels, cv=kf, scoring=scoring, return_train_score=show_training)
-for metric_name, score in list(scores.items())[2:]:
-    # print(score)
-    print(f"Mean {metric_name}: {score.mean()} (±{score.std()})")
+# # kfold
+# kf = KFold(n_splits=10, shuffle=True, random_state=42)
+# cross_val(clas, ecg_samples, sample_labels, kf, scoring, show_training)
 
-# shuffle
-shuffle_split = ShuffleSplit(n_splits=10)
-print("shuffle Cross-Validation:")
-scores = cross_validate(clas, ecg_samples, sample_labels, cv=shuffle_split, scoring=scoring, return_train_score=show_training)
-for metric_name, score in list(scores.items())[2:]:
-    # print(score)
-    print(f"Mean {metric_name}: {score.mean()} (±{score.std()})")
+# # shuffle
+# shuffle_split = ShuffleSplit(n_splits=10, random_state=42)
+# cross_val(clas, ecg_samples, sample_labels, shuffle_split, scoring, show_training)
 
 
 #split Rpeak_intvs
@@ -90,18 +84,23 @@ for i, Rpeak_intv in enumerate(Rpeak_intvs):
 print("sample count:", len(intv_samples))
 
 # 10 fold cross validation svm, use Rpeak_intv samples
+clas = svm.SVC(kernel="rbf", probability=True, C=10, gamma=10) #optimised rbf params
 # kfold
 kf = KFold(n_splits=10, shuffle=True)
-print("kf Cross-Validation:")
-scores = cross_validate(clas, intv_samples, sample_labels, cv=kf, scoring=scoring, return_train_score=show_training)
-for metric_name, score in list(scores.items())[2:]:
-    # print(score)
-    print(f"Mean {metric_name}: {score.mean()} (±{score.std()})")
+cross_val(clas, intv_samples, sample_labels, kf, scoring, show_training) #90%acc w rbf params
 
 # shuffle
 shuffle_split = ShuffleSplit(n_splits=10)
-print("shuffle Cross-Validation:")
-scores = cross_validate(clas, intv_samples, sample_labels, cv=shuffle_split, scoring=scoring, return_train_score=show_training)
-for metric_name, score in list(scores.items())[2:]:
-    # print(score)
-    print(f"Mean {metric_name}: {score.mean()} (±{score.std()})")
+cross_val(clas, intv_samples, sample_labels, shuffle_split, scoring, show_training) #90%acc w rbf params
+
+# # diff train test split changes accuracy by ±1%
+
+# split_range = np.linspace(0.1, 0.9, 9)
+# for split in split_range:
+#     print("train_test_split:", split)
+#     ecgs_train, ecgs_test, segment_labels_train, segment_labels_test = train_test_split(intv_samples, sample_labels, test_size=split)
+#     clas.fit(ecgs_train, segment_labels_train)
+#     segment_labels_pred = clas.predict(ecgs_test)
+#     accuracy = accuracy_score(segment_labels_test, segment_labels_pred)
+#     print(accuracy)
+
