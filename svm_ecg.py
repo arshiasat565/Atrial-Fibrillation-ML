@@ -84,7 +84,7 @@ for i, Rpeak_intv in enumerate(Rpeak_intvs):
 print("sample count:", len(intv_samples))
 
 # 10 fold cross validation svm, use Rpeak_intv samples
-clas = svm.SVC(kernel="rbf", probability=True, C=10, gamma=10) #optimised rbf params
+clas = svm.SVC(kernel="rbf", probability=True, C=10, gamma=10) #optimised rbf params C:[1, 10 100]
 # kfold
 kf = KFold(n_splits=10, shuffle=True)
 cross_val(clas, intv_samples, sample_labels, kf, scoring, show_training) #90%acc w rbf params

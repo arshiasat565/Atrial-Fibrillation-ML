@@ -138,6 +138,6 @@ def Rwave_peaks(ecg, d_ecg, Rwave_peaks_d_ecg, time):
 def Rwave_t_peaks(time, Rpeaks):
     Rpeaks = Rpeaks.astype(np.int64)
     Rwave_t = time[Rpeaks]
-    Rwave_t = Rwave_t.reset_index(drop = True)
-    Rwave_t = Rwave_t.drop(columns = ['index'])
+    # Rwave_t = Rwave_t.reset_index(drop = True)
+    # Rwave_t = Rwave_t.drop(columns = ['index'])
     return Rwave_t
