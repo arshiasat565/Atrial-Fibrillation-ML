@@ -190,3 +190,63 @@ def data_init(min_freq, max_freq, length, start = 0):
         Rpeak_intvs.append(Rpeak_intervals(ecg, df.Time))
         
     return ecgs, Rpeak_intvs, labels
+
+
+def time_dependent_frequency(signal, sampling_rate, window_size=256, overlap=0.5):
+    """
+    Estimate the time-dependent frequency of a signal as the first moment of the power spectrogram
+    using Short-Time Fourier Transform (STFT).
+    
+    Args:
+    - signal: 1D numpy array representing the input signal.
+    - sampling_rate: Sampling rate of the input signal.
+    - window_size: Size of the window for STFT (default is 256).
+    - overlap: Overlap between consecutive windows (0 to 1, default is 0.5).
+    
+    Generates:
+    - frequencies: 1D numpy array representing the frequency axis.
+    - times: 1D numpy array representing the time axis.
+    - spectrogram: 2D numpy array representing the time-frequency spectrogram.
+    
+    Returns:
+    - time_dep_freq: 1D numpy array representing the time-dependent frequency
+    """
+    freqs, times, spectrogram = sps.spectrogram(signal, fs=sampling_rate, window='hann',
+                                                  nperseg=window_size, noverlap=int(window_size * overlap))
+    
+    # print(freqs.shape, times.shape, spectrogram.shape)
+    # X, Y = np.meshgrid(times, freqs)
+    # plt.pcolormesh(X, Y, 10 * np.log10(spectrogram), shading='gouraud')
+    # plt.ylabel('Frequency [Hz]')
+    # plt.xlabel('Time [sec]')
+    # plt.colorbar(label='Power/Frequency (dB/Hz)')
+    # plt.show()
+
+    spectrogram_abs = np.abs(spectrogram)
+    time_dep_freq = [np.sum(freqs * time_segm) / np.sum(time_segm) for time_segm in spectrogram_abs.T]
+    # plt.plot(times, time_dep_freq)
+    # plt.xlabel('Time (s)')
+    # plt.ylabel('Frequency (Hz)')
+    # plt.title('Time-Dependent Frequency')
+    # plt.grid(True)
+    # plt.show()
+    return time_dep_freq
+
+def spectral_entropy(signal, fs, nperseg=256, noverlap=None, nfft=None):
+    """
+    Calculate spectral entropy of a signal.
+
+    Parameters:
+    - signal: Input signal.
+    - fs: Sampling frequency of the signal.
+    - nperseg: Length of each segment for calculating the FFT (default is 256).
+    - noverlap: Number of points to overlap between segments (default is None, which corresponds to 50% overlap).
+    - nfft: Number of points to use in the FFT (default is None, which uses nperseg).
+
+    Returns:
+    - spectral_entropy value.
+    """
+    f, Pxx = sps.welch(signal, fs, nperseg=nperseg, noverlap=noverlap, nfft=nfft)
+    Pxx_normalized = Pxx / np.sum(Pxx)  # Normalize the PSD
+    spectral_entropy = -np.sum(Pxx_normalized * np.log2(Pxx_normalized))
+    return spectral_entropy
