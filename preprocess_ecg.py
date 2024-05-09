@@ -197,7 +197,7 @@ def time_dependent_frequency(signal, sampling_rate, window_size=256, overlap=0.5
     Estimate the time-dependent frequency of a signal as the first moment of the power spectrogram
     using Short-Time Fourier Transform (STFT).
     
-    Args:
+    Parameters:
     - signal: 1D numpy array representing the input signal.
     - sampling_rate: Sampling rate of the input signal.
     - window_size: Size of the window for STFT (default is 256).
@@ -232,21 +232,22 @@ def time_dependent_frequency(signal, sampling_rate, window_size=256, overlap=0.5
     # plt.show()
     return time_dep_freq
 
-def spectral_entropy(signal, fs, nperseg=256, noverlap=None, nfft=None):
+def spectral_entropy(signal, sampling_rate, window_size=256, overlap=0.5):
     """
     Calculate spectral entropy of a signal.
 
     Parameters:
-    - signal: Input signal.
-    - fs: Sampling frequency of the signal.
-    - nperseg: Length of each segment for calculating the FFT (default is 256).
-    - noverlap: Number of points to overlap between segments (default is None, which corresponds to 50% overlap).
-    - nfft: Number of points to use in the FFT (default is None, which uses nperseg).
-
+    - signal: 1D numpy array representing the input signal.
+    - sampling_rate: Sampling rate of the input signal.
+    - window_size: Size of the window for STFT (default is 256).
+    - overlap: Overlap between consecutive windows (0 to 1, default is 0.5).
+    
     Returns:
-    - spectral_entropy value.
+    - spectral_entropy values.
     """
-    f, Pxx = sps.welch(signal, fs, nperseg=nperseg, noverlap=noverlap, nfft=nfft)
-    Pxx_normalized = Pxx / np.sum(Pxx)  # Normalize the PSD
-    spectral_entropy = -np.sum(Pxx_normalized * np.log2(Pxx_normalized))
+    freqs, times, spectrogram = sps.spectrogram(signal, fs=sampling_rate, window='hann',
+                                                  nperseg=window_size, noverlap=int(window_size * overlap))
+    ps = np.abs(spectrogram)**2 # power spectrogram
+    norm_ps = ps / np.sum(ps)
+    spectral_entropy = -np.sum(norm_ps * np.log2(norm_ps), axis=0)
     return spectral_entropy
