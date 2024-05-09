@@ -192,7 +192,7 @@ def data_init(min_freq, max_freq, length, start = 0):
     return ecgs, Rpeak_intvs, labels
 
 
-def time_dependent_frequency(signal, sampling_rate, window_size=256, overlap=0.5):
+def time_dependent_frequency(signal, sampling_rate, window_size=128, overlap=0.5):
     """
     Estimate the time-dependent frequency of a signal as the first moment of the power spectrogram
     using Short-Time Fourier Transform (STFT).
@@ -232,7 +232,7 @@ def time_dependent_frequency(signal, sampling_rate, window_size=256, overlap=0.5
     # plt.show()
     return time_dep_freq
 
-def spectral_entropy(signal, sampling_rate, window_size=256, overlap=0.5):
+def spectral_entropy(signal, sampling_rate, window_size=128, overlap=0.5):
     """
     Calculate spectral entropy of a signal.
 
