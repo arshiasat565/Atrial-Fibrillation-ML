@@ -36,6 +36,7 @@ for model in af_models:
     #     print(len(ecg))
     ecg = np.array(ecg[0:signal_length])
     ecg = ecg.reshape(len(ecg))
+    ecg = preprocess_ecg.flatten_filter(ecg, 5, 40, sample_rate=sample_rate)
     ecgs.append(ecg)
 
     labels.append(True)
@@ -52,6 +53,7 @@ for model in non_af_models:
     #     print(len(ecg))
     ecg = np.array(ecg[0:signal_length])
     ecg = ecg.reshape(len(ecg))
+    ecg = preprocess_ecg.flatten_filter(ecg, 5, 40, sample_rate=sample_rate)
     ecgs.append(ecg)
 
     labels.append(False)

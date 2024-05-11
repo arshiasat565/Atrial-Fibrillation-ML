@@ -24,7 +24,7 @@ def bandpass(data: np.ndarray, edges: list[float], sample_rate: float, poles: in
     filtered_bp_data = sps.sosfiltfilt(sos, data)
     return filtered_bp_data
 
-def flatten_filter(ecg, min, max):
+def flatten_filter(ecg, min, max, sample_rate=sample_rate):
     # ecg = lowpass(ecg, max, sample_rate)
     # ecg = highpass(ecg, min, sample_rate)
     # only use bandpass for filtering
