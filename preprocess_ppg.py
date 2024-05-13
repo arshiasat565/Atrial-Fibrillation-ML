@@ -24,12 +24,22 @@ def bandpass(data: np.ndarray, edges: list[float], sample_rate: float, poles: in
     filtered_bp_data = sps.sosfiltfilt(sos, data)
     return filtered_bp_data
 
-def flatten_filter(ppg, min, max):
+def flatten_filter(ppg, min, max, sample_rate=sample_rate):
     # ppg = lowpass(ppg, max, sample_rate)
     # ppg = highpass(ppg, min, sample_rate)
     # only use bandpass for filtering
-    ppg = bandpass(ppg, [min, max], sample_rate)
-    return ppg
+    result = bandpass(ppg, [min, max], sample_rate)
+    # fig, ((ax1, ax2)) = plt.subplots(1, 2, figsize=(10, 3), sharex=True, sharey=True)
+    # ax1.plot(ppg)
+    # ax1.set_title("Original Signal")
+    # ax1.margins(0, .1)
+    # ax1.grid(alpha=.5, ls='--')
+    # ax2.plot(result)
+    # ax2.set_title("After Signal")
+    # ax1.margins(0, .1)
+    # ax2.grid(alpha=.5, ls='--')
+    # plt.show()
+    return result
 
 def interpolate(arr):
     nan_indices = np.where(np.isnan(arr))[0]
@@ -216,3 +226,64 @@ def data_init(min_freq, max_freq, length, start = 0):
         interval_labels.append(False)
 
     return ppgs, times, Rpeak_intvs, segment_labels, interval_labels
+
+
+def time_dependent_frequency(signal, sampling_rate, window_size=128, overlap=0.5):
+    """
+    Estimate the time-dependent frequency of a signal as the first moment of the power spectrogram
+    using Short-Time Fourier Transform (STFT).
+    
+    Parameters:
+    - signal: 1D numpy array representing the input signal.
+    - sampling_rate: Sampling rate of the input signal.
+    - window_size: Size of the window for STFT (default is 256).
+    - overlap: Overlap between consecutive windows (0 to 1, default is 0.5).
+    
+    Generates:
+    - frequencies: 1D numpy array representing the frequency axis.
+    - times: 1D numpy array representing the time axis.
+    - spectrogram: 2D numpy array representing the time-frequency spectrogram.
+    
+    Returns:
+    - time_dep_freq: 1D numpy array representing the time-dependent frequency
+    """
+    freqs, times, spectrogram = sps.spectrogram(signal, fs=sampling_rate, window='hann',
+                                                  nperseg=window_size, noverlap=int(window_size * overlap))
+    
+    # print(freqs.shape, times.shape, spectrogram.shape)
+    # X, Y = np.meshgrid(times, freqs)
+    # plt.pcolormesh(X, Y, 10 * np.log10(spectrogram), shading='gouraud')
+    # plt.ylabel('Frequency [Hz]')
+    # plt.xlabel('Time [sec]')
+    # plt.colorbar(label='Power/Frequency (dB/Hz)')
+    # plt.show()
+
+    spectrogram_abs = np.abs(spectrogram)
+    time_dep_freq = [np.sum(freqs * time_segm) / np.sum(time_segm) for time_segm in spectrogram_abs.T]
+    # plt.plot(times, time_dep_freq)
+    # plt.xlabel('Time (s)')
+    # plt.ylabel('Frequency (Hz)')
+    # plt.title('Time-Dependent Frequency')
+    # plt.grid(True)
+    # plt.show()
+    return time_dep_freq
+
+def spectral_entropy(signal, sampling_rate, window_size=128, overlap=0.5):
+    """
+    Calculate spectral entropy of a signal.
+
+    Parameters:
+    - signal: 1D numpy array representing the input signal.
+    - sampling_rate: Sampling rate of the input signal.
+    - window_size: Size of the window for STFT (default is 256).
+    - overlap: Overlap between consecutive windows (0 to 1, default is 0.5).
+    
+    Returns:
+    - spectral_entropy values.
+    """
+    freqs, times, spectrogram = sps.spectrogram(signal, fs=sampling_rate, window='hann',
+                                                  nperseg=window_size, noverlap=int(window_size * overlap))
+    ps = np.abs(spectrogram)**2 # power spectrogram
+    norm_ps = ps / np.sum(ps)
+    spectral_entropy = -np.sum(norm_ps * np.log2(norm_ps), axis=0)
+    return spectral_entropy

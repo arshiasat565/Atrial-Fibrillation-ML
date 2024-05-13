@@ -28,8 +28,18 @@ def flatten_filter(ecg, min, max, sample_rate=sample_rate):
     # ecg = lowpass(ecg, max, sample_rate)
     # ecg = highpass(ecg, min, sample_rate)
     # only use bandpass for filtering
-    ecg = bandpass(ecg, [min, max], sample_rate)
-    return ecg
+    result = bandpass(ecg, [min, max], sample_rate)
+    # fig, ((ax1, ax2)) = plt.subplots(1, 2, figsize=(10, 3), sharex=True, sharey=True)
+    # ax1.plot(ecg)
+    # ax1.set_title("Original Signal")
+    # ax1.margins(0, .1)
+    # ax1.grid(alpha=.5, ls='--')
+    # ax2.plot(result)
+    # ax2.set_title("After Signal")
+    # ax1.margins(0, .1)
+    # ax2.grid(alpha=.5, ls='--')
+    # plt.show()
+    return result
 
 def interpolate(arr):
     nan_indices = np.where(np.isnan(arr))[0]

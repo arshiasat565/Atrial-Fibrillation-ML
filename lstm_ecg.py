@@ -36,7 +36,7 @@ for model in af_models:
     #     print(len(ecg))
     ecg = np.array(ecg[0:signal_length])
     ecg = ecg.reshape(len(ecg))
-    ecg = preprocess_ecg.flatten_filter(ecg, 5, 40, sample_rate=sample_rate)
+    ecg = preprocess_ecg.flatten_filter(ecg, 1, 40, sample_rate=sample_rate)
     ecgs.append(ecg)
 
     labels.append(True)
@@ -53,7 +53,7 @@ for model in non_af_models:
     #     print(len(ecg))
     ecg = np.array(ecg[0:signal_length])
     ecg = ecg.reshape(len(ecg))
-    ecg = preprocess_ecg.flatten_filter(ecg, 5, 40, sample_rate=sample_rate)
+    ecg = preprocess_ecg.flatten_filter(ecg, 1, 40, sample_rate=sample_rate)
     ecgs.append(ecg)
 
     labels.append(False)
@@ -89,6 +89,7 @@ se_mean = np.mean(ses)
 se_std = np.std(ses)
 ses = np.array([(x - se_mean) / se_std for x in ses])
 
+# print(tdfs.shape, ses.shape)
 features = np.stack((tdfs, ses), axis=-1)
 
 
@@ -155,7 +156,7 @@ model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy']
 # loss, accuracy = model.evaluate(se_test, se_label_test)
 # print(f'Test Loss: {loss}, Test Accuracy: {accuracy}')
 
-model.fit(feature_train, feature_label_train, validation_data=(feature_val, feature_label_val), epochs=100)
+model.fit(feature_train, feature_label_train, validation_data=(feature_val, feature_label_val), epochs=100, verbose=0)
 
 loss, accuracy = model.evaluate(feature_test, feature_label_test)
 print(f'Test Loss: {loss}, Test Accuracy: {accuracy}')
