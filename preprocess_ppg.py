@@ -147,13 +147,14 @@ def fft(ppg, sample_rate):
     frequencies = np.fft.fftfreq(len(fft_result), 1/sample_rate)  # Assuming a sampling frequency of 1000 Hz
 
     # Plot the magnitude spectrum
-    plt.figure(figsize=(10, 6))
-    plt.plot(frequencies, np.abs(fft_result))
-    plt.title('FFT of Filtered PPG Signal')
-    plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Magnitude')
-    plt.show()
-    return fft_result, frequencies
+    # plt.figure(figsize=(10, 6))
+    # plt.plot(frequencies, np.abs(fft_result))
+    # plt.title('FFT of Filtered PPG Signal')
+    # plt.xlabel('Frequency (Hz)')
+    # plt.ylabel('Magnitude')
+    # plt.show()
+    fft_result = np.abs(fft_result)
+    return fft_result
     
 
 
