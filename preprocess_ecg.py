@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import glob
 import lab_funcs_ecg
 
-sample_rate = 120
 
 def lowpass(data: np.ndarray, cutoff: float, sample_rate: float, poles: int = 5):
     sos = sps.butter(poles, cutoff, 'lowpass', fs=sample_rate, output='sos')
@@ -24,7 +23,7 @@ def bandpass(data: np.ndarray, edges: list[float], sample_rate: float, poles: in
     filtered_bp_data = sps.sosfiltfilt(sos, data)
     return filtered_bp_data
 
-def flatten_filter(ecg, min, max, sample_rate=sample_rate):
+def flatten_filter(ecg, min, max, sample_rate):
     # ecg = lowpass(ecg, max, sample_rate)
     # ecg = highpass(ecg, min, sample_rate)
     # only use bandpass for filtering
@@ -69,9 +68,9 @@ def interpolate(arr):
 
     return arr
 
-def interp_flat(df, start, min_freq, max_freq):
+def interp_flat(df, start, min_freq, max_freq, sample_rate):
     result = interpolate(df.ECG)
-    result = flatten_filter(result, min_freq, max_freq)
+    result = flatten_filter(result, min_freq, max_freq, sample_rate)
     
     # fig, ((ax1, ax2)) = plt.subplots(1, 2, figsize=(10, 3), sharex=True, sharey=True)
     # ax1.plot(df.Time, df.ECG)
@@ -126,10 +125,10 @@ def Rpeak_intervals(ecg, time):
     
     return Rpeak_intervals
 
-def fft(ecg):
+def fft(ecg, sample_rate):
     # Compute the FFT
     fft_result = np.fft.fft(ecg)
-    frequencies = np.fft.fftfreq(len(fft_result), 1/1000)  # Assuming a sampling frequency of 1000 Hz
+    frequencies = np.fft.fftfreq(len(fft_result), 1/sample_rate)  # Assuming a sampling frequency of 1000 Hz
 
     # Plot the magnitude spectrum
     plt.figure(figsize=(10, 6))
@@ -138,6 +137,7 @@ def fft(ecg):
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('Magnitude')
     plt.show()
+    return fft_result, frequencies
     
 
 
@@ -168,7 +168,7 @@ def fft(ecg):
 
 # fft(flat_filt_ecg)
 
-def data_init(min_freq, max_freq, length, start = 0):
+def data_init(min_freq, max_freq, length, sample_rate, start = 0):
 
     af_csv = glob.glob('mimic_perform_af_csv/*.csv')
     non_af_csv = glob.glob('mimic_perform_non_af_csv/*.csv')
@@ -187,14 +187,14 @@ def data_init(min_freq, max_freq, length, start = 0):
     # interpolate and bandpass ecgs
     for csv in af_csv:
         df = pd.read_csv(csv)
-        ecg = interp_flat(df, start, min_freq, max_freq)
+        ecg = interp_flat(df, start, min_freq, max_freq, sample_rate)
         ecgs.append(ecg)
         labels.append(True)
         Rpeak_intvs.append(Rpeak_intervals(ecg, df.Time))
 
     for csv in non_af_csv:
         df = pd.read_csv(csv)
-        ecg = interp_flat(df, start, min_freq, max_freq)
+        ecg = interp_flat(df, start, min_freq, max_freq, sample_rate)
         ecgs.append(ecg)
         labels.append(False)
         Rpeak_intvs.append(Rpeak_intervals(ecg, df.Time))

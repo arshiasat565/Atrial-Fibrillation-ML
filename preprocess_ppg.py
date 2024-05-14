@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 import glob
 import lab_funcs_ppg
 
-sample_rate = 120
 
 def lowpass(data: np.ndarray, cutoff: float, sample_rate: float, poles: int = 5):
     sos = sps.butter(poles, cutoff, 'lowpass', fs=sample_rate, output='sos')
@@ -24,7 +23,7 @@ def bandpass(data: np.ndarray, edges: list[float], sample_rate: float, poles: in
     filtered_bp_data = sps.sosfiltfilt(sos, data)
     return filtered_bp_data
 
-def flatten_filter(ppg, min, max, sample_rate=sample_rate):
+def flatten_filter(ppg, min, max, sample_rate):
     # ppg = lowpass(ppg, max, sample_rate)
     # ppg = highpass(ppg, min, sample_rate)
     # only use bandpass for filtering
@@ -69,7 +68,7 @@ def interpolate(arr):
 
     return arr
 
-def interp_flat(df, length, min_freq, max_freq):
+def interp_flat(df, length, min_freq, max_freq, sample_rate):
     ppg_segments = []
     time_segments = []
     result = interpolate(df.PPG)
@@ -77,7 +76,7 @@ def interp_flat(df, length, min_freq, max_freq):
     for i in range(1, len(result), length):
         ppg_segment = result[i:i+length]
         time_segment = df.Time[i:i+length]
-        flatten_ppg = flatten_filter(ppg_segment, min_freq, max_freq)
+        flatten_ppg = flatten_filter(ppg_segment, min_freq, max_freq, sample_rate)
         ppg_segments.append(flatten_ppg)
         time_segments.append(time_segment)
     
@@ -142,10 +141,10 @@ def Rpeak_intervals(ppgs, times):
     
     return Rpeak_intervals
 
-def fft(ppg):
+def fft(ppg, sample_rate):
     # Compute the FFT
     fft_result = np.fft.fft(ppg)
-    frequencies = np.fft.fftfreq(len(fft_result), 1/1000)  # Assuming a sampling frequency of 1000 Hz
+    frequencies = np.fft.fftfreq(len(fft_result), 1/sample_rate)  # Assuming a sampling frequency of 1000 Hz
 
     # Plot the magnitude spectrum
     plt.figure(figsize=(10, 6))
@@ -154,6 +153,7 @@ def fft(ppg):
     plt.xlabel('Frequency (Hz)')
     plt.ylabel('Magnitude')
     plt.show()
+    return fft_result, frequencies
     
 
 
@@ -184,7 +184,7 @@ def fft(ppg):
 
 # fft(flat_filt_ppg)
 
-def data_init(min_freq, max_freq, length, start = 0):
+def data_init(min_freq, max_freq, length, sample_rate, start = 0):
 
     af_csv = glob.glob('mimic_perform_af_csv/*.csv')
     non_af_csv = glob.glob('mimic_perform_non_af_csv/*.csv')
@@ -206,7 +206,7 @@ def data_init(min_freq, max_freq, length, start = 0):
     for csv in af_csv:
         # print(csv)
         df = pd.read_csv(csv)
-        ppg_segments, time_segments = interp_flat(df, length, min_freq, max_freq)
+        ppg_segments, time_segments = interp_flat(df, length, min_freq, max_freq, sample_rate)
         for ppg_segment, time_segment in zip(ppg_segments, time_segments):
             ppgs.append(ppg_segment)
             times.append(time_segment)
@@ -217,7 +217,7 @@ def data_init(min_freq, max_freq, length, start = 0):
     for csv in non_af_csv:
         # print(csv)
         df = pd.read_csv(csv)
-        ppg_segments, time_segments = interp_flat(df, length, min_freq, max_freq)
+        ppg_segments, time_segments = interp_flat(df, length, min_freq, max_freq, sample_rate)
         for ppg_segment, time_segment in zip(ppg_segments, time_segments):
             ppgs.append(ppg_segment)
             times.append(time_segment)

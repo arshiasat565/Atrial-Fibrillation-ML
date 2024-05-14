@@ -27,6 +27,7 @@ min_freq = 0.5
 max_freq = 5
 start = 0
 length = 3750 # 30 secs
+sample_rate = 125
 
 def cross_val(clas, ppgs, labels, cv, scoring, return_train_score):
     print(f"{cv} Cross-Validation:")
@@ -36,7 +37,7 @@ def cross_val(clas, ppgs, labels, cv, scoring, return_train_score):
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
 
 
-ppgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ppg.data_init(min_freq, max_freq, length)
+ppgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ppg.data_init(min_freq, max_freq, length, sample_rate)
 
 # clas = svm.SVC(kernel="rbf", probability=True)
 
