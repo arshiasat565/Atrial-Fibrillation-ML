@@ -65,18 +65,6 @@ labels = np.array(labels)
 labels = labels.reshape(len(labels), 1)
 
 
-# ecg Rpeak intervals
-for ecg in ecgs:
-    ecg_index = np.arange(len(ecg))
-    Rpeak_intv = preprocess_ecg.Rpeak_intervals(ecg, ecg_index)
-    Rpeak_intvs.append(Rpeak_intv)
-
-max_Rpeak_intv = max(len(arr) for arr in Rpeak_intvs)
-Rpeak_intvs = [np.pad(Rpeak_intv, (0, max_Rpeak_intv - len(Rpeak_intv)), mode='constant') for Rpeak_intv in Rpeak_intvs]
-Rpeak_intvs = np.array(Rpeak_intvs)
-# print(Rpeak_intvs.shape)
-
-
 # ecg instantaneous frequencies (time-dependent)
 tdfs = np.array([preprocess_ecg.time_dependent_frequency(ecg, sample_rate) for ecg in ecgs])
 tdf_mean = np.mean(tdfs)
@@ -93,46 +81,11 @@ ses = np.array([(x - se_mean) / se_std for x in ses])
 features = np.stack((tdfs, ses), axis=-1)
 
 
-# ecg sample arrays
-# ecg_sample_labels = []
-# ecg_samples = []
-# for i, ecg in enumerate(ecgs):
-#     for j in range(0, len(ecg), sample_size):
-#         ecg_sample = ecg[j:j+sample_size]
-#         if len(ecg_sample) == sample_size:
-#             ecg_samples.append(ecg_sample)
-#             ecg_sample_labels.append(labels[i])
-# ecg_samples = np.array(ecg_samples)
-# ecg_sample_labels = np.array(ecg_sample_labels)
-# print(ecg_samples.shape, type(ecg_samples), type(ecg_samples[0]), type(ecg_samples[0, 0]), type(ecg_samples[0, 0, 0]))
-# print(ecg_sample_labels.shape)
-
-
 # splits
-# Rpeak_intv_train, Rpeak_intv_test, Rpeak_intv_label_train, Rpeak_intv_label_test = train_test_split(Rpeak_intvs, labels, test_size=0.2, random_state=42)
-# Rpeak_intv_train, Rpeak_intv_val, Rpeak_intv_label_train, Rpeak_intv_label_val = train_test_split(Rpeak_intv_train, Rpeak_intv_label_train, test_size=0.2, random_state=42)
-# print((Rpeak_intv_train.shape), (Rpeak_intv_val.shape), (Rpeak_intv_test.shape))
-# print((Rpeak_intv_label_train.shape), (Rpeak_intv_label_val.shape), (Rpeak_intv_label_test.shape))
-
-# tdf_train, tdf_test, tdf_label_train, tdf_label_test = train_test_split(tdfs, labels, test_size=0.2, random_state=42)
-# tdf_train, tdf_val, tdf_label_train, tdf_label_val = train_test_split(tdf_train, tdf_label_train, test_size=0.2, random_state=42)
-# print((tdf_train.shape), (tdf_val.shape), (tdf_test.shape))
-# print((tdf_label_train.shape), (tdf_label_val.shape), (tdf_label_test.shape))
-
-# se_train, se_test, se_label_train, se_label_test = train_test_split(ses, labels, test_size=0.2, random_state=42)
-# se_train, se_val, se_label_train, se_label_val = train_test_split(se_train, se_label_train, test_size=0.2, random_state=42)
-# print((se_train.shape), (se_val.shape), (se_test.shape))
-# print((se_label_train.shape), (se_label_val.shape), (se_label_test.shape))
-
 feature_train, feature_test, feature_label_train, feature_label_test = train_test_split(features, labels, test_size=0.2)
 feature_train, feature_val, feature_label_train, feature_label_val = train_test_split(feature_train, feature_label_train, test_size=0.2)
 print((feature_train.shape), (feature_val.shape), (feature_test.shape))
 print((feature_label_train.shape), (feature_label_val.shape), (feature_label_test.shape))
-
-# ecg_train, ecg_test, ecg_label_train, ecg_label_test = train_test_split(ecg_samples, ecg_sample_labels, test_size=0.2, random_state=42)
-# ecg_train, ecg_val, ecg_label_train, ecg_label_val = train_test_split(ecg_train, ecg_label_train, test_size=0.2, random_state=42)
-# print((ecg_train.shape), (ecg_val.shape), (ecg_test.shape))
-# print((ecg_label_train.shape), (ecg_label_val.shape), (ecg_label_test.shape))
 
 
 model = Sequential()
@@ -141,27 +94,15 @@ model.add(Dense(units=1, activation='sigmoid')) #T/F
 
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
-# model.fit(Rpeak_intv_train, Rpeak_intv_label_train, validation_data=(Rpeak_intv_val, Rpeak_intv_label_val), epochs=100)
 
-# loss, accuracy = model.evaluate(Rpeak_intv_test, Rpeak_intv_label_test)
-# print(f'Test Loss: {loss}, Test Accuracy: {accuracy}')
 
-# model.fit(tdf_train, tdf_label_train, validation_data=(tdf_val, tdf_label_val), epochs=100)
 
-# loss, accuracy = model.evaluate(tdf_test, tdf_label_test)
-# print(f'Test Loss: {loss}, Test Accuracy: {accuracy}')
 
-# model.fit(se_train, se_label_train, validation_data=(se_val, se_label_val), epochs=100)
 
-# loss, accuracy = model.evaluate(se_test, se_label_test)
-# print(f'Test Loss: {loss}, Test Accuracy: {accuracy}')
 
 model.fit(feature_train, feature_label_train, validation_data=(feature_val, feature_label_val), epochs=100, verbose=0)
 
 loss, accuracy = model.evaluate(feature_test, feature_label_test)
 print(f'Test Loss: {loss}, Test Accuracy: {accuracy}')
 
-# model.fit(ecg_train, ecg_label_train, validation_data=(ecg_val, ecg_label_val), epochs=100)
 
-# loss, accuracy = model.evaluate(ecg_test, ecg_label_test)
-# print(f'Test Loss: {loss}, Test Accuracy: {accuracy}')
