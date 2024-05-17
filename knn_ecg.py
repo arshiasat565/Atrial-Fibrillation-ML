@@ -29,9 +29,9 @@ start = 0
 length = 150000 # 20 mins
 sample_rate = 125
 
-def cross_val(clas, ecgs, labels, cv, scoring, return_train_score):
-    print(f"{cv} Cross-Validation:")
-    scores = cross_validate(clas, ecgs, labels, cv=cv, scoring=scoring, return_train_score=return_train_score)
+def cross_val(clas, ecgs, labels, scoring, return_train_score):
+    print("Cross-Validation:")
+    scores = cross_validate(clas, ecgs, labels, scoring=scoring, return_train_score=return_train_score)
     score_list = list(scores.items())[2:]
     for metric_name, score in score_list:
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
@@ -58,6 +58,7 @@ ffts = np.array([preprocess_ecg.fft(ecg, sample_rate) for ecg in ecg_samples])
 
 ffts_train, ffts_test, labels_train, labels_test = train_test_split(ffts, sample_labels, test_size=0.2)
 
+
 knn_classifier = KNeighborsClassifier(n_neighbors=5)
 knn_classifier.fit(ffts_train, labels_train)
 
@@ -68,6 +69,9 @@ labels_pred = knn_classifier.predict(ffts_test)
 accuracy = accuracy_score(labels_test, labels_pred)
 report = classification_report(labels_test, labels_pred)
 
+print(f"{knn_classifier}")
 print("Accuracy:", accuracy)
 print("Classification Report:")
 print(report)
+
+cross_val(knn_classifier, ffts, sample_labels, scoring, show_training)

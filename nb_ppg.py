@@ -30,7 +30,7 @@ length = 3750 # 30 secs
 sample_rate = 125
 
 def cross_val(clas, ppgs, labels, scoring, return_train_score):
-    print("Naive Bayes Cross-Validation:")
+    print("Cross-Validation:")
     scores = cross_validate(clas, ppgs, labels, scoring=scoring, return_train_score=return_train_score)
     score_list = list(scores.items())[2:]
     for metric_name, score in score_list:
@@ -53,6 +53,9 @@ labels_pred = nb_classifier.predict(ffts_test)
 accuracy = accuracy_score(labels_test, labels_pred)
 report = classification_report(labels_test, labels_pred)
 
+print(f"{nb_classifier}")
 print("Accuracy:", accuracy)
 print("Classification Report:")
 print(report)
+
+cross_val(nb_classifier, ffts, segment_labels, scoring, show_training)

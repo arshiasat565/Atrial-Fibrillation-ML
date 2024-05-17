@@ -29,9 +29,9 @@ start = 0
 length = 3750 # 30 secs
 sample_rate = 125
 
-def cross_val(clas, ppgs, labels, cv, scoring, return_train_score):
-    print(f"{cv} Cross-Validation:")
-    scores = cross_validate(clas, ppgs, labels, cv=cv, scoring=scoring, return_train_score=return_train_score)
+def cross_val(clas, ppgs, labels, scoring, return_train_score):
+    print("Cross-Validation:")
+    scores = cross_validate(clas, ppgs, labels, scoring=scoring, return_train_score=return_train_score)
     score_list = list(scores.items())[2:]
     for metric_name, score in score_list:
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
@@ -53,6 +53,9 @@ labels_pred = knn_classifier.predict(ffts_test)
 accuracy = accuracy_score(labels_test, labels_pred)
 report = classification_report(labels_test, labels_pred)
 
+print(f"{knn_classifier}")
 print("Accuracy:", accuracy)
 print("Classification Report:")
 print(report)
+
+cross_val(knn_classifier, ffts, segment_labels, scoring, show_training)

@@ -12,6 +12,7 @@ from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection import cross_val_score, cross_validate
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, classification_report
 
 scoring = {
@@ -30,7 +31,7 @@ length = 3750 # 30 secs
 sample_rate = 125
 
 def cross_val(clas, ppgs, labels, scoring, return_train_score):
-    print("Decision Tree Cross-Validation:")
+    print("Cross-Validation:")
     scores = cross_validate(clas, ppgs, labels, scoring=scoring, return_train_score=return_train_score)
     score_list = list(scores.items())[2:]
     for metric_name, score in score_list:
@@ -59,5 +60,38 @@ for i, Rpeak_intv in enumerate(Rpeak_intvs):
             sample_labels.append(interval_labels[i])
 print("sample count:", len(intv_samples))
 
-clas = DecisionTreeClassifier(criterion='gini', splitter='best')
-cross_val(clas, intv_samples, sample_labels, scoring, show_training)
+intv_samples_train, intv_samples_test, labels_train, labels_test = train_test_split(intv_samples, sample_labels, test_size=0.2)
+
+
+dt_classifier = DecisionTreeClassifier(criterion='gini', splitter='best')
+dt_classifier.fit(intv_samples_train, labels_train)
+
+# Predict labels for testing data
+labels_pred = dt_classifier.predict(intv_samples_test)
+
+# Evaluate performance
+accuracy = accuracy_score(labels_test, labels_pred)
+report = classification_report(labels_test, labels_pred)
+print(f"{dt_classifier}")
+print("Accuracy:", accuracy)
+print("Classification Report:")
+print(report)
+
+cross_val(dt_classifier, intv_samples, sample_labels, scoring, show_training)
+
+
+rf_classifier = RandomForestClassifier(n_estimators=100)
+rf_classifier.fit(intv_samples_train, labels_train)
+
+# Predict labels for testing data
+labels_pred = rf_classifier.predict(intv_samples_test)
+
+# Evaluate performance
+accuracy = accuracy_score(labels_test, labels_pred)
+report = classification_report(labels_test, labels_pred)
+print(f"\n{rf_classifier}")
+print("Accuracy:", accuracy)
+print("Classification Report:")
+print(report)
+
+cross_val(rf_classifier, intv_samples, sample_labels, scoring, show_training)
