@@ -11,7 +11,7 @@ from sklearn.model_selection import KFold
 from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection import cross_val_score, cross_validate
 from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, classification_report
 
 scoring = {
@@ -29,9 +29,9 @@ start = 0
 length = 3750 # 30 secs
 sample_rate = 125
 
-def cross_val(clas, ppgs, labels, cv, scoring, return_train_score):
-    print(f"{cv} Cross-Validation:")
-    scores = cross_validate(clas, ppgs, labels, cv=cv, scoring=scoring, return_train_score=return_train_score)
+def cross_val(clas, ppgs, labels, scoring, return_train_score):
+    print("Naive Bayes Cross-Validation:")
+    scores = cross_validate(clas, ppgs, labels, scoring=scoring, return_train_score=return_train_score)
     score_list = list(scores.items())[2:]
     for metric_name, score in score_list:
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
@@ -43,11 +43,11 @@ ffts = np.array([preprocess_ppg.fft(ppg, sample_rate) for ppg in ppgs])
 
 ffts_train, ffts_test, labels_train, labels_test = train_test_split(ffts, segment_labels, test_size=0.2)
 
-knn_classifier = KNeighborsClassifier(n_neighbors=5)
-knn_classifier.fit(ffts_train, labels_train)
+nb_classifier = GaussianNB()
+nb_classifier.fit(ffts_train, labels_train)
 
 # Predict labels for testing data
-labels_pred = knn_classifier.predict(ffts_test)
+labels_pred = nb_classifier.predict(ffts_test)
 
 # Evaluate performance
 accuracy = accuracy_score(labels_test, labels_pred)
