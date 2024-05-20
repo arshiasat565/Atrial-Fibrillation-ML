@@ -1,67 +1,16 @@
-import os
-import scipy.io
 import numpy as np
-import glob
 import preprocess_ppg
 from sklearn.model_selection import train_test_split
 from keras.models import Sequential
-from keras.layers import LSTM, Dense
+from keras.layers import LSTM, Dense, Input, Bidirectional, Dropout
+from tensorflow.keras import regularizers
 
-
-af_models = glob.glob('model/af/**/*.mat')
-non_af_models = glob.glob('model/non_af/*.mat')
-
-signal_labels = []
-parameters = []
-signals = []
-ppgs = []
-labels = []
-Rpeak_intv1s = []
-Rpeak_intv2s = []
 signal_length = 7500 # 30 secs
 sample_rate = 250
-sample_size = 250
 
-# data init
-for model in af_models:
-    data = scipy.io.loadmat(model)
-    signal_labels.append(data['labels'])
-    parameters.append(data['parameters'])
-    signals = data['signals'][0, 0]
+ppgs, labels = preprocess_ppg.large_data(signal_length, sample_rate)
 
-    ppg = np.array(signals['PPG'])[:, 0:signal_length] # ['PPG'] 1&2
-    ppg1 = preprocess_ppg.flatten_filter(ppg[0], 1, 40, sample_rate=sample_rate)
-    ppg2 = preprocess_ppg.flatten_filter(ppg[1], 1, 40, sample_rate=sample_rate)
-    ppg = np.stack((ppg1, ppg2))
-    ppgs.append(ppg)
-
-    # print(ppg.shape)
-    labels.append(True)
-    # print(len(signals['PPG'][0]))
-
-for model in non_af_models:
-    data = scipy.io.loadmat(model)
-    signal_labels.append(data['labels'])
-    parameters.append(data['parameters'])
-    signals = data['signals'][0, 0]
-
-    ppg = np.array(signals['PPG'])[:, 0:signal_length] # ['PPG'] 1&2
-    ppg1 = preprocess_ppg.flatten_filter(ppg[0], 1, 40, sample_rate=sample_rate)
-    ppg2 = preprocess_ppg.flatten_filter(ppg[1], 1, 40, sample_rate=sample_rate)
-    ppg = np.stack((ppg1, ppg2))
-    ppgs.append(ppg)
-
-    # print(ppg.shape)
-    labels.append(False)
-    # print(len(signals['PPG'][0]))
-
-# print(len(ppgs))
-
-labels = np.array(labels)
-labels = labels.reshape(len(labels), 1)
-
-
-# ecg instantaneous frequencies (time-dependent)
+# ppg instantaneous frequencies (time-dependent)
 tdf1s = np.array([preprocess_ppg.time_dependent_frequency(ppg[0], sample_rate) for ppg in ppgs])
 tdf_mean = np.mean(tdf1s)
 tdf_std = np.std(tdf1s)
@@ -71,7 +20,7 @@ tdf_mean = np.mean(tdf2s)
 tdf_std = np.std(tdf2s)
 tdf2s = np.array([(x - tdf_mean) / tdf_std for x in tdf2s])
 
-# ecg spectral entropies
+# ppg spectral entropies
 se1s = np.array([preprocess_ppg.spectral_entropy(ppg[0], sample_rate) for ppg in ppgs])
 se_mean = np.mean(se1s)
 se_std = np.std(se1s)
@@ -82,8 +31,11 @@ se_std = np.std(se2s)
 se2s = np.array([(x - se_mean) / se_std for x in se2s])
 
 print(tdf1s.shape, tdf2s.shape, se1s.shape, se2s.shape)
-features = np.stack((tdf1s, tdf2s, se1s, se2s), axis=-1)
+tdfs = np.concatenate((tdf1s, tdf2s))
+ses = np.concatenate((se1s, se2s))
+features = np.stack((tdfs, ses), axis=-1)
 print(features.shape)
+labels = np.concatenate((labels, labels))
       
 
 # splits
@@ -94,12 +46,25 @@ print((feature_label_train.shape), (feature_label_val.shape), (feature_label_tes
 
 
 model = Sequential()
-model.add(LSTM(units=32, input_shape=(len(features[0]), 4)))
+model.add(Input(shape=(len(features[0]), 2)))
+# print("128")
+# model.add(Bidirectional(LSTM(units=128, return_sequences=True)))
+# model.add(Dropout(0.25))
+print("64")
+model.add(Bidirectional(LSTM(units=64, return_sequences=True)))
+model.add(Dropout(0.25))
+print("32")
+model.add(Bidirectional(LSTM(units=32)))
+model.add(Dropout(0.25))
 model.add(Dense(units=1, activation='sigmoid')) #T/F
 
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
-model.fit(feature_train, feature_label_train, validation_data=(feature_val, feature_label_val), epochs=100, verbose=0)
+accs = []
+for i in range(10):
+    model.fit(feature_train, feature_label_train, validation_data=(feature_val, feature_label_val), epochs=100, verbose=0)
 
-loss, accuracy = model.evaluate(feature_test, feature_label_test)
-print(f'Test Loss: {loss}, Test Accuracy: {accuracy}')
+    loss, accuracy = model.evaluate(feature_test, feature_label_test)
+    print(f'Test Loss: {loss}, Test Accuracy: {accuracy}')
+    accs.append(accuracy)
+print(np.average(accs))

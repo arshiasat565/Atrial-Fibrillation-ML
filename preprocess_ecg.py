@@ -1,5 +1,5 @@
 
-
+import scipy.io
 import pandas as pd
 import numpy as np
 import scipy.signal as sps
@@ -262,3 +262,60 @@ def spectral_entropy(signal, sampling_rate, window_size=128, overlap=0.5):
     norm_ps = ps / np.sum(ps)
     spectral_entropy = -np.sum(norm_ps * np.log2(norm_ps), axis=0)
     return spectral_entropy
+
+def large_data(signal_length, sample_rate, size=None):
+    af_models = glob.glob('model/1/*.mat')
+    non_af_models = glob.glob('model/0/*.mat')
+    
+    signal_labels = []
+    parameters = []
+    ecgs = []
+    labels = []
+
+    print("1")
+    # data init
+    for model in af_models:
+        data = scipy.io.loadmat(model)
+        signal_labels.append(data['labels'])
+        parameters.append(data['parameters'])
+        signals = data['signals'][0, 0]
+
+        ecg_list = signals[1][0] # ['multileadECG'] I (may change when noise diff)
+        ecg = [i[0] for i in ecg_list]
+        # if len(ecg) < signal_length:
+        #     print(len(ecg))
+        ecg = np.array(ecg[0:signal_length])
+        ecg = ecg.reshape(len(ecg))
+        ecg = flatten_filter(ecg, 1, 40, sample_rate=sample_rate)
+        ecgs.append(ecg)
+
+        labels.append(True)
+    if size != None:
+        ecgs = ecgs[:size//2]
+        labels = labels[:size//2]
+
+    for model in non_af_models:
+        data = scipy.io.loadmat(model)
+        signal_labels.append(data['labels'])
+        parameters.append(data['parameters'])
+        signals = data['signals'][0, 0]
+
+        ecg_list = signals[1][0] # ['multileadECG'] I (may change when noise diff)
+        ecg = [i[0] for i in ecg_list]
+        # if len(ecg) < signal_length:
+        #     print(len(ecg))
+        ecg = np.array(ecg[0:signal_length])
+        ecg = ecg.reshape(len(ecg))
+        ecg = flatten_filter(ecg, 1, 40, sample_rate=sample_rate)
+        ecgs.append(ecg)
+
+        labels.append(False)
+    if size != None:
+        ecgs = ecgs[:size]
+        labels = labels[:size]
+
+    print(len(ecgs))
+
+    labels = np.array(labels)
+    labels = labels.reshape(len(labels), 1)
+    return ecgs, labels
