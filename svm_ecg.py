@@ -25,7 +25,7 @@ show_training = False
 min_freq = 5
 max_freq = 40
 start = 0
-length = 150000 # 20 mins
+length = 3750 # 30 secs
 sample_rate = 125
 
 def cross_val(clas, ecgs, labels, cv, scoring, return_train_score):
@@ -36,37 +36,22 @@ def cross_val(clas, ecgs, labels, cv, scoring, return_train_score):
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
 
 
-ecgs, Rpeak_intvs, labels = preprocess_ecg.data_init(min_freq, max_freq, length, sample_rate)
+ecgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ecg.data_init(min_freq, max_freq, length, sample_rate)
+print(len(ecgs), len(times), len(Rpeak_intvs), len(segment_labels), len(interval_labels))
 
-# clas = svm.SVC(kernel="rbf", probability=True)
+# length_sec = length / sample_rate
+# # split ecg
+# print(f"\nBy {length_sec}s ecg samples")
+# print("sample count:", len(ecgs))
 
-# #10 fold cross validation svm, use full ecg (base)
-# cross_val(clas, ecgs, labels, 10, scoring, show_training)
-
-
-# #split ecg
-# sample_size = 3750 # 30 seconds
-# ecg_samples = []
-# sample_labels = []
-# sample_size_sec = sample_size / 125
-# print(f"\nBy {sample_size_sec}s ecg samples")
-
-# for i, ecg in enumerate(ecgs):
-#     for j in range(0, len(ecg)-1, sample_size): # last signal removed
-#         ecg_sample = ecg[j:j+sample_size]
-#         # print(len(ecg_sample))
-#         ecg_samples.append(ecg_sample)
-#         sample_labels.append(labels[i])
-# print("sample count:", len(ecg_samples))
-
-# 10 fold cross validation svm, use ecg samples
+# # 10 fold cross validation svm, use ecg samples
 # # kfold
-# kf = KFold(n_splits=10, shuffle=True, random_state=42)
-# cross_val(clas, ecg_samples, sample_labels, kf, scoring, show_training)
+# kf = KFold(n_splits=10, shuffle=True)
+# cross_val(clas, ecgs, segment_labels, kf, scoring, show_training) #67%acc
 
 # # shuffle
-# shuffle_split = ShuffleSplit(n_splits=10, random_state=42)
-# cross_val(clas, ecg_samples, sample_labels, shuffle_split, scoring, show_training)
+# shuffle_split = ShuffleSplit(n_splits=10)
+# cross_val(clas, ecgs, segment_labels, shuffle_split, scoring, show_training) #67%acc
 
 
 #split Rpeak_intvs
@@ -81,7 +66,7 @@ for i, Rpeak_intv in enumerate(Rpeak_intvs):
         # print(len(ecg_sample))
         if len(intv_sample) == sample_size:
             intv_samples.append(intv_sample)
-            sample_labels.append(labels[i])
+            sample_labels.append(interval_labels[i])
 print("sample count:", len(intv_samples))
 
 # 10 fold cross validation svm, use Rpeak_intv samples

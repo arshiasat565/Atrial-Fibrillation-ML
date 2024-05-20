@@ -38,16 +38,9 @@ def cross_val(clas, ppgs, labels, cv, scoring, return_train_score):
 
 
 ppgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ppg.data_init(min_freq, max_freq, length, sample_rate)
+print(len(ppgs), len(times), len(Rpeak_intvs), len(segment_labels), len(interval_labels))
 
-# clas = svm.SVC(kernel="rbf", probability=True)
-
-# #10 fold cross validation svm, use full ppg (N/A, segmented by default)
-# scores = cross_val_score(clas, ppgs, labels, cv=10)
-# print("base Cross-Validation Scores:", scores)
-# mean_accuracy = np.mean(scores)
-# print("Mean Accuracy:", mean_accuracy)
-
-# length_sec = length / 125
+# length_sec = length / sample_rate
 # # split ppg
 # print(f"\nBy {length_sec}s ppg samples")
 # print("sample count:", len(ppgs))
