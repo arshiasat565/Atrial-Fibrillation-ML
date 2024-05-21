@@ -27,7 +27,7 @@ show_training = False
 min_freq = 5
 max_freq = 40
 start = 0
-length = 150000 # 20 mins
+length = 3750 # 30 secs
 sample_rate = 125
 
 def cross_val(clas, ecgs, labels, scoring, return_train_score):
@@ -38,12 +38,12 @@ def cross_val(clas, ecgs, labels, scoring, return_train_score):
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
 
 
+# get patient data
 ecgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ecg.data_init(min_freq, max_freq, length, sample_rate)
 
-
-#split Rpeak_intvs
+# split Rpeak_intvs
 print("\nBy Rpeak_intv samples")
-sample_size = 25
+sample_size = 10
 intv_samples = []
 sample_labels = []
 
@@ -59,6 +59,7 @@ print("sample count:", len(intv_samples))
 intv_samples_train, intv_samples_test, labels_train, labels_test = train_test_split(intv_samples, sample_labels, test_size=0.2)
 
 
+# setup decision tree model
 dt_classifier = DecisionTreeClassifier(criterion='gini', splitter='best')
 dt_classifier.fit(intv_samples_train, labels_train)
 
@@ -76,6 +77,7 @@ print(report)
 cross_val(dt_classifier, intv_samples, sample_labels, scoring, show_training)
 
 
+# setup random forest model
 rf_classifier = RandomForestClassifier(n_estimators=100)
 rf_classifier.fit(intv_samples_train, labels_train)
 

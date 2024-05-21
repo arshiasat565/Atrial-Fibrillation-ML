@@ -26,7 +26,7 @@ show_training = False
 min_freq = 5
 max_freq = 40
 start = 0
-length = 150000 # 20 mins
+length = 3750 # 30 secs
 sample_rate = 125
 
 def cross_val(clas, ecgs, labels, scoring, return_train_score):
@@ -40,24 +40,10 @@ def cross_val(clas, ecgs, labels, scoring, return_train_score):
 # get patient data
 ecgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ecg.data_init(min_freq, max_freq, length, sample_rate)
 
-#split ecg
-sample_size = 3750 # 30 seconds
-ecg_samples = []
-sample_labels = []
-sample_size_sec = sample_size / sample_rate
-print(f"\nBy {sample_size_sec}s ecg samples")
+# feature extraction
+ffts = np.array([preprocess_ecg.fft(ecg, sample_rate) for ecg in ecgs])
 
-for i, ecg in enumerate(ecgs):
-    for j in range(0, len(ecg)-1, sample_size): # last signal removed
-        ecg_sample = ecg[j:j+sample_size]
-        # print(len(ecg_sample))
-        ecg_samples.append(ecg_sample)
-        sample_labels.append(interval_labels[i])
-print("sample count:", len(ecg_samples))
-
-ffts = np.array([preprocess_ecg.fft(ecg, sample_rate) for ecg in ecg_samples])
-
-ffts_train, ffts_test, labels_train, labels_test = train_test_split(ffts, sample_labels, test_size=0.2)
+ffts_train, ffts_test, labels_train, labels_test = train_test_split(ffts, segment_labels, test_size=0.2)
 
 
 # setup naive bayes model
@@ -76,4 +62,4 @@ print("Accuracy:", accuracy)
 print("Classification Report:")
 print(report)
 
-cross_val(nb_classifier, ffts, sample_labels, scoring, show_training)
+cross_val(nb_classifier, ffts, segment_labels, scoring, show_training)
