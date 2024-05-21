@@ -38,7 +38,7 @@ def cross_val(clas, ecgs, labels, scoring, return_train_score):
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
 
 
-ecgs, Rpeak_intvs, labels = preprocess_ecg.data_init(min_freq, max_freq, length, sample_rate)
+ecgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ecg.data_init(min_freq, max_freq, length, sample_rate)
 
 
 #split Rpeak_intvs
@@ -53,7 +53,7 @@ for i, Rpeak_intv in enumerate(Rpeak_intvs):
         # print(len(ecg_sample))
         if len(intv_sample) == sample_size:
             intv_samples.append(intv_sample)
-            sample_labels.append(labels[i])
+            sample_labels.append(interval_labels[i])
 print("sample count:", len(intv_samples))
 
 intv_samples_train, intv_samples_test, labels_train, labels_test = train_test_split(intv_samples, sample_labels, test_size=0.2)
