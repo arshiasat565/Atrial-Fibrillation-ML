@@ -5,9 +5,8 @@ from keras.models import Sequential
 from keras.layers import Conv1D, MaxPooling1D, Flatten, Dense, Input, Dropout
 
 signal_length = 7500 # 30 secs
-sample_rate = 250
 
-ecgs, labels = preprocess_ecg.large_data(signal_length, sample_rate)
+ecgs, labels, sample_rate = preprocess_ecg.large_data(signal_length)
 
 # ecg instantaneous frequencies (time-dependent)
 tdfs = np.array([preprocess_ecg.time_dependent_frequency(ecg, sample_rate) for ecg in ecgs])

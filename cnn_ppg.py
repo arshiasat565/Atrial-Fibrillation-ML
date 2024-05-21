@@ -4,10 +4,33 @@ from sklearn.model_selection import train_test_split
 from keras.models import Sequential
 from keras.layers import Conv1D, MaxPooling1D, Flatten, Dense, Input, Dropout
 
-signal_length = 7500 # 30 secs
-sample_rate = 250
+signal_length = 7500 # 30 secs (250Hz large_data mat)
+min_freq = 0.5
+max_freq = 5
+length = 3750 # 30 secs (125Hz data_init csv)
 
-ppgs, labels = preprocess_ppg.large_data(signal_length, sample_rate)
+# # get patient data
+# ppgs, times, Rpeak_intvs, segment_labels, interval_labels, sample_rate = preprocess_ppg.data_init(min_freq, max_freq)
+# labels = np.array(segment_labels)
+
+# # feature extraction
+# # ppg instantaneous frequencies (time-dependent)
+# tdfs = np.array([preprocess_ppg.time_dependent_frequency(ppg, sample_rate) for ppg in ppgs])
+# tdf_mean = np.mean(tdfs)
+# tdf_std = np.std(tdfs)
+# tdfs = np.array([(x - tdf_mean) / tdf_std for x in tdfs])
+
+# # ppg spectral entropies
+# ses = np.array([preprocess_ppg.spectral_entropy(ppg, sample_rate) for ppg in ppgs])
+# se_mean = np.mean(ses)
+# se_std = np.std(ses)
+# ses = np.array([(x - se_mean) / se_std for x in ses])
+
+# print(tdfs.shape, ses.shape)
+# features = np.stack((tdfs, ses), axis=-1)
+# print(features.shape)
+
+ppgs, labels, sample_rate = preprocess_ppg.large_data(signal_length)
 
 # ppg instantaneous frequencies (time-dependent)
 tdf1s = np.array([preprocess_ppg.time_dependent_frequency(ppg[0], sample_rate) for ppg in ppgs])

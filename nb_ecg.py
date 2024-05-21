@@ -27,7 +27,6 @@ min_freq = 5
 max_freq = 40
 start = 0
 length = 3750 # 30 secs
-sample_rate = 125
 
 def cross_val(clas, ecgs, labels, scoring, return_train_score):
     print("Cross-Validation:")
@@ -38,7 +37,7 @@ def cross_val(clas, ecgs, labels, scoring, return_train_score):
 
 
 # get patient data
-ecgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ecg.data_init(min_freq, max_freq, length, sample_rate)
+ecgs, times, Rpeak_intvs, segment_labels, interval_labels, sample_rate = preprocess_ecg.data_init(min_freq, max_freq, length)
 
 # feature extraction
 ffts = np.array([preprocess_ecg.fft(ecg, sample_rate) for ecg in ecgs])

@@ -28,7 +28,6 @@ min_freq = 0.5
 max_freq = 5
 start = 0
 length = 3750 # 30 secs
-sample_rate = 125
 
 def cross_val(clas, ppgs, labels, scoring, return_train_score):
     print("Cross-Validation:")
@@ -39,7 +38,7 @@ def cross_val(clas, ppgs, labels, scoring, return_train_score):
 
 
 # get patient data
-ppgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ppg.data_init(min_freq, max_freq, length, sample_rate)
+ppgs, times, Rpeak_intvs, segment_labels, interval_labels, sample_rate = preprocess_ppg.data_init(min_freq, max_freq, length)
 
 # # split ppg
 # clas = DecisionTreeClassifier(criterion='gini', splitter='best')
