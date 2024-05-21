@@ -186,8 +186,8 @@ def fft(ppg, sample_rate):
 # fft(flat_filt_ppg)
 
 # data from MIMIC perform dataset; 20 mins 125Hz 19 AF, 16 nonAF patients
-def data_init(min_freq, max_freq, length, sample_rate, start = 0):
-
+def data_init(min_freq, max_freq, length, start = 0):
+    sample_rate = 125
     af_csv = glob.glob('mimic_perform_af_csv/*.csv')
     non_af_csv = glob.glob('mimic_perform_non_af_csv/*.csv')
 
@@ -227,7 +227,7 @@ def data_init(min_freq, max_freq, length, sample_rate, start = 0):
         Rpeak_intvs.append(Rpeak_intervals(ppg_segments, time_segments))
         interval_labels.append(False)
 
-    return ppgs, times, Rpeak_intvs, segment_labels, interval_labels
+    return ppgs, times, Rpeak_intvs, segment_labels, interval_labels, sample_rate
 
 
 def time_dependent_frequency(signal, sampling_rate, window_size=128, overlap=0.5):
@@ -291,7 +291,8 @@ def spectral_entropy(signal, sampling_rate, window_size=128, overlap=0.5):
     return spectral_entropy
 
 # data from generator (2 pulses); 100 RR intervals (80s) cut to signal_length, AF/nonAF data 1024 each 
-def large_data(signal_length, sample_rate, size=None):
+def large_data(signal_length, size=None):
+    sample_rate = 250
     af_models = glob.glob('model/1/*.mat')
     non_af_models = glob.glob('model/0/*.mat')
 
@@ -344,4 +345,4 @@ def large_data(signal_length, sample_rate, size=None):
 
     labels = np.array(labels)
     labels = labels.reshape(len(labels), 1)
-    return ppgs, labels
+    return ppgs, labels, sample_rate
