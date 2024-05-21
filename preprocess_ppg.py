@@ -193,7 +193,7 @@ def data_init(min_freq, max_freq, length, sample_rate, start = 0):
     column_names = [
         "Time",
         "PPG",
-        "PPG",
+        "ECG",
         "resp"
     ]
 

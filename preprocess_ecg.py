@@ -99,7 +99,7 @@ def Rpeak_intervals(ecgs, times):
     for ecg, time in zip(ecgs, times):
         time = time.values
         d_ecg, peaks_d_ecg = lab_funcs_ecg.decg_peaks(ecg, time)
-        filt_peaks, threshold = lab_funcs_ecg.d_ecg_peaks(d_ecg, peaks_d_ecg, 0, time, 0.5, 0.5)
+        filt_peaks, threshold = lab_funcs_ecg.d_ecg_peaks(d_ecg, peaks_d_ecg, 2, time, 0.5, 0.5)
         Rpeaks = lab_funcs_ecg.Rwave_peaks(ecg, d_ecg, filt_peaks, time)
         # Rwave_t_peaks = lab_funcs.Rwave_t_peaks(time, Rpeaks)
         Rpeak_diff = np.diff(Rpeaks)
@@ -107,7 +107,6 @@ def Rpeak_intervals(ecgs, times):
 
 
         # fig, ((ax2, ax3, ax4)) = plt.subplots(1, 3, figsize=(10, 3), sharex=True, sharey=True)
-        # fig, ((ax3)) = plt.subplots(1, 1, figsize=(10, 3), sharex=True, sharey=True)
         # ax2.plot(time[0:len(time)-1], d_ecg, color = 'red')
         # ax2.plot(time[peaks_d_ecg], d_ecg[peaks_d_ecg], "x", color = 'g')
         # ax2.set_xlabel('Time [s]')
