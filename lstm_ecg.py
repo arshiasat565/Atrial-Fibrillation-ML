@@ -4,17 +4,21 @@ from sklearn.model_selection import train_test_split
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Input, Bidirectional, Dropout
 
-signal_length = 7500 # 30 secs (large_data mat)
+signal_length = 7500 # 30 secs (250Hz large_data mat)
 min_freq = 5
 max_freq = 40
-length = 3750 # 30 secs (data_init csv)
+length = 3750 # 30 secs (125Hz data_init csv)
 sample_rate = 250
 
 
+# get patient data
 ecgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ecg.data_init(min_freq, max_freq, length, sample_rate)
 segment_labels = np.array(segment_labels)
+
+# get generated data
 # ecgs, labels = preprocess_ecg.large_data(signal_length, sample_rate)
 
+# feature extraction
 # ecg instantaneous frequencies (time-dependent)
 tdfs = np.array([preprocess_ecg.time_dependent_frequency(ecg, sample_rate) for ecg in ecgs])
 tdf_mean = np.mean(tdfs)
@@ -46,6 +50,7 @@ model.add(Dense(units=1, activation='sigmoid')) #T/F
 
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
+# fit several times on the same split
 accs = []
 losses = []
 for i in range(10):

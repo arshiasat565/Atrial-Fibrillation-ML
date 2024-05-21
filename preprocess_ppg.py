@@ -185,6 +185,7 @@ def fft(ppg, sample_rate):
 
 # fft(flat_filt_ppg)
 
+# data from MIMIC perform dataset; 20 mins 125Hz 19 AF, 16 nonAF patients
 def data_init(min_freq, max_freq, length, sample_rate, start = 0):
 
     af_csv = glob.glob('mimic_perform_af_csv/*.csv')
@@ -289,6 +290,7 @@ def spectral_entropy(signal, sampling_rate, window_size=128, overlap=0.5):
     spectral_entropy = -np.sum(norm_ps * np.log2(norm_ps), axis=0)
     return spectral_entropy
 
+# data from generator (2 pulses); 100 RR intervals (80s) cut to signal_length, AF/nonAF data 1024 each 
 def large_data(signal_length, sample_rate, size=None):
     af_models = glob.glob('model/1/*.mat')
     non_af_models = glob.glob('model/0/*.mat')

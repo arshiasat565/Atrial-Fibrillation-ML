@@ -37,12 +37,16 @@ def cross_val(clas, ppgs, labels, scoring, return_train_score):
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
 
 
+# get patient data
 ppgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ppg.data_init(min_freq, max_freq, length, sample_rate)
 
+# feature extraction
 ffts = np.array([preprocess_ppg.fft(ppg, sample_rate) for ppg in ppgs])
 
 ffts_train, ffts_test, labels_train, labels_test = train_test_split(ffts, segment_labels, test_size=0.2)
 
+
+# setup naive bayes model
 nb_classifier = GaussianNB()
 nb_classifier.fit(ffts_train, labels_train)
 

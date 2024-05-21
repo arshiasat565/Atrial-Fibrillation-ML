@@ -13,6 +13,7 @@ from sklearn.model_selection import cross_val_score, cross_validate
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 
+# scoring metrics
 scoring = {
     'accuracy': make_scorer(accuracy_score),
     'precision': make_scorer(precision_score),
@@ -35,7 +36,7 @@ def cross_val(clas, ecgs, labels, cv, scoring, return_train_score):
     for metric_name, score in score_list:
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
 
-
+# get patient data
 ecgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ecg.data_init(min_freq, max_freq, length, sample_rate)
 
 # length_sec = length / sample_rate
@@ -53,7 +54,7 @@ ecgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ecg.data_
 # cross_val(clas, ecgs, segment_labels, shuffle_split, scoring, show_training) #67%acc
 
 
-#split Rpeak_intvs
+# split Rpeak_intvs
 print("\nBy Rpeak_intv samples")
 sample_size = 10
 intv_samples = []

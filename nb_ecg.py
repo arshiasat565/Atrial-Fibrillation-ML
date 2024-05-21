@@ -37,6 +37,7 @@ def cross_val(clas, ecgs, labels, scoring, return_train_score):
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
 
 
+# get patient data
 ecgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ecg.data_init(min_freq, max_freq, length, sample_rate)
 
 #split ecg
@@ -59,6 +60,7 @@ ffts = np.array([preprocess_ecg.fft(ecg, sample_rate) for ecg in ecg_samples])
 ffts_train, ffts_test, labels_train, labels_test = train_test_split(ffts, sample_labels, test_size=0.2)
 
 
+# setup naive bayes model
 nb_classifier = GaussianNB()
 nb_classifier.fit(ffts_train, labels_train)
 

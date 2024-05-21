@@ -14,6 +14,7 @@ from sklearn.model_selection import cross_validate
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 
+# scoring metrics
 scoring = {
     'accuracy': make_scorer(accuracy_score),
     'precision': make_scorer(precision_score),
@@ -36,7 +37,7 @@ def cross_val(clas, ppgs, labels, cv, scoring, return_train_score):
     for metric_name, score in score_list:
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
 
-
+# get patient data
 ppgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ppg.data_init(min_freq, max_freq, length, sample_rate)
 
 # length_sec = length / sample_rate
@@ -53,14 +54,12 @@ ppgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ppg.data_
 # shuffle_split = ShuffleSplit(n_splits=10)
 # cross_val(clas, ppgs, segment_labels, shuffle_split, scoring, show_training) #67%acc
 
-
 # split Rpeak_intvs
 print("\nBy Rpeak_intv samples")
 sample_size = 10
 intv_samples = []
 sample_labels = []
 
-#TODO: Add Padding
 for i, Rpeak_intv in enumerate(Rpeak_intvs):
     for j in range(0, len(Rpeak_intv), sample_size):
         intv_sample = Rpeak_intv[j:j+sample_size]
