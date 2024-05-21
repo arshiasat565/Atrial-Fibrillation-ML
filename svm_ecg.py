@@ -37,7 +37,6 @@ def cross_val(clas, ecgs, labels, cv, scoring, return_train_score):
 
 
 ecgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ecg.data_init(min_freq, max_freq, length, sample_rate)
-print(len(ecgs), len(times), len(Rpeak_intvs), len(segment_labels), len(interval_labels))
 
 # length_sec = length / sample_rate
 # # split ecg
@@ -56,7 +55,7 @@ print(len(ecgs), len(times), len(Rpeak_intvs), len(segment_labels), len(interval
 
 #split Rpeak_intvs
 print("\nBy Rpeak_intv samples")
-sample_size = 25
+sample_size = 10
 intv_samples = []
 sample_labels = []
 
@@ -70,7 +69,7 @@ for i, Rpeak_intv in enumerate(Rpeak_intvs):
 print("sample count:", len(intv_samples))
 
 # 10 fold cross validation svm, use Rpeak_intv samples
-clas = svm.SVC(kernel="rbf", probability=True, C=10, gamma=10) #optimised rbf params C:[1, 10 100]
+clas = svm.SVC(kernel="rbf", probability=True, C=1, gamma=0.001) #optimised rbf params C:[1, 10, 100]
 # kfold
 kf = KFold(n_splits=10, shuffle=True)
 cross_val(clas, intv_samples, sample_labels, kf, scoring, show_training) #90%acc w rbf params

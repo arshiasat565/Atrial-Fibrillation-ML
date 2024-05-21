@@ -38,7 +38,6 @@ def cross_val(clas, ppgs, labels, cv, scoring, return_train_score):
 
 
 ppgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ppg.data_init(min_freq, max_freq, length, sample_rate)
-print(len(ppgs), len(times), len(Rpeak_intvs), len(segment_labels), len(interval_labels))
 
 # length_sec = length / sample_rate
 # # split ppg
