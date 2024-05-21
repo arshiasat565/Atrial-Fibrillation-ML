@@ -3,43 +3,67 @@ import preprocess_ppg
 from sklearn.model_selection import train_test_split
 from keras.models import Sequential
 from keras.layers import LSTM, Dense, Input, Bidirectional, Dropout
-from tensorflow.keras import regularizers
 
-signal_length = 7500 # 30 secs
+signal_length = 7500 # 30 secs (large_data mat)
+min_freq = 0.5
+max_freq = 5
+length = 3750 # 30 secs (data_init csv)
 sample_rate = 250
 
-ppgs, labels = preprocess_ppg.large_data(signal_length, sample_rate)
+
+ppgs, times, Rpeak_intvs, segment_labels, interval_labels = preprocess_ppg.data_init(min_freq, max_freq, length, sample_rate)
+segment_labels = np.array(segment_labels)
 
 # ppg instantaneous frequencies (time-dependent)
-tdf1s = np.array([preprocess_ppg.time_dependent_frequency(ppg[0], sample_rate) for ppg in ppgs])
-tdf_mean = np.mean(tdf1s)
-tdf_std = np.std(tdf1s)
-tdf1s = np.array([(x - tdf_mean) / tdf_std for x in tdf1s])
-tdf2s = np.array([preprocess_ppg.time_dependent_frequency(ppg[1], sample_rate) for ppg in ppgs])
-tdf_mean = np.mean(tdf2s)
-tdf_std = np.std(tdf2s)
-tdf2s = np.array([(x - tdf_mean) / tdf_std for x in tdf2s])
+tdfs = np.array([preprocess_ppg.time_dependent_frequency(ppg, sample_rate) for ppg in ppgs])
+tdf_mean = np.mean(tdfs)
+tdf_std = np.std(tdfs)
+tdfs = np.array([(x - tdf_mean) / tdf_std for x in tdfs])
 
 # ppg spectral entropies
-se1s = np.array([preprocess_ppg.spectral_entropy(ppg[0], sample_rate) for ppg in ppgs])
-se_mean = np.mean(se1s)
-se_std = np.std(se1s)
-se1s = np.array([(x - se_mean) / se_std for x in se1s])
-se2s = np.array([preprocess_ppg.spectral_entropy(ppg[1], sample_rate) for ppg in ppgs])
-se_mean = np.mean(se2s)
-se_std = np.std(se2s)
-se2s = np.array([(x - se_mean) / se_std for x in se2s])
+ses = np.array([preprocess_ppg.spectral_entropy(ppg, sample_rate) for ppg in ppgs])
+se_mean = np.mean(ses)
+se_std = np.std(ses)
+ses = np.array([(x - se_mean) / se_std for x in ses])
 
-print(tdf1s.shape, tdf2s.shape, se1s.shape, se2s.shape)
-tdfs = np.concatenate((tdf1s, tdf2s))
-ses = np.concatenate((se1s, se2s))
+print(tdfs.shape, ses.shape)
 features = np.stack((tdfs, ses), axis=-1)
 print(features.shape)
-labels = np.concatenate((labels, labels))
+
+
+# ppgs, labels = preprocess_ppg.large_data(signal_length, sample_rate)
+
+# # ppg instantaneous frequencies (time-dependent)
+# tdf1s = np.array([preprocess_ppg.time_dependent_frequency(ppg[0], sample_rate) for ppg in ppgs])
+# tdf_mean = np.mean(tdf1s)
+# tdf_std = np.std(tdf1s)
+# tdf1s = np.array([(x - tdf_mean) / tdf_std for x in tdf1s])
+# tdf2s = np.array([preprocess_ppg.time_dependent_frequency(ppg[1], sample_rate) for ppg in ppgs])
+# tdf_mean = np.mean(tdf2s)
+# tdf_std = np.std(tdf2s)
+# tdf2s = np.array([(x - tdf_mean) / tdf_std for x in tdf2s])
+
+# # ppg spectral entropies
+# se1s = np.array([preprocess_ppg.spectral_entropy(ppg[0], sample_rate) for ppg in ppgs])
+# se_mean = np.mean(se1s)
+# se_std = np.std(se1s)
+# se1s = np.array([(x - se_mean) / se_std for x in se1s])
+# se2s = np.array([preprocess_ppg.spectral_entropy(ppg[1], sample_rate) for ppg in ppgs])
+# se_mean = np.mean(se2s)
+# se_std = np.std(se2s)
+# se2s = np.array([(x - se_mean) / se_std for x in se2s])
+
+# print(tdf1s.shape, tdf2s.shape, se1s.shape, se2s.shape)
+# tdfs = np.concatenate((tdf1s, tdf2s))
+# ses = np.concatenate((se1s, se2s))
+# features = np.stack((tdfs, ses), axis=-1)
+# print(features.shape)
+
+# labels = np.concatenate((labels, labels))
       
 
 # splits
-feature_train, feature_test, feature_label_train, feature_label_test = train_test_split(features, labels, test_size=0.2)
+feature_train, feature_test, feature_label_train, feature_label_test = train_test_split(features, segment_labels, test_size=0.2)
 feature_train, feature_val, feature_label_train, feature_label_val = train_test_split(feature_train, feature_label_train, test_size=0.2)
 print((feature_train.shape), (feature_val.shape), (feature_test.shape))
 print((feature_label_train.shape), (feature_label_val.shape), (feature_label_test.shape))
@@ -61,10 +85,12 @@ model.add(Dense(units=1, activation='sigmoid')) #T/F
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
 accs = []
+losses = []
 for i in range(10):
     model.fit(feature_train, feature_label_train, validation_data=(feature_val, feature_label_val), epochs=100, verbose=0)
 
     loss, accuracy = model.evaluate(feature_test, feature_label_test)
     print(f'Test Loss: {loss}, Test Accuracy: {accuracy}')
+    losses.append(loss)
     accs.append(accuracy)
-print(np.average(accs))
+print(np.average(losses), np.average(accs))
