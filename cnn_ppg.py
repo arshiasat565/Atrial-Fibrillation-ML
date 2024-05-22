@@ -43,6 +43,7 @@ metrics = [
 # get generated data
 print("generated")
 ppgs, labels, sample_rate = preprocess_ppg.large_data(signal_length)
+ppgs, labels = np.array(ppgs), np.array(labels)
 
 # ppg instantaneous frequencies (time-dependent)
 tdf1s = np.array([preprocess_ppg.time_dependent_frequency(ppg[0], sample_rate) for ppg in ppgs])
@@ -81,9 +82,21 @@ print((feature_label_train.shape), (feature_label_val.shape), (feature_label_tes
 
 model = Sequential()
 model.add(Input(shape=(len(features[0]), 2)))
+print("32")
+model.add(Conv1D(filters=32, kernel_size=3, activation='relu'))
+model.add(MaxPooling1D(pool_size=2))
+model.add(Dropout(0.25))
 print("64")
 model.add(Conv1D(filters=64, kernel_size=3, activation='relu'))
 model.add(MaxPooling1D(pool_size=2))
+model.add(Dropout(0.25))
+print("128")
+model.add(Conv1D(filters=128, kernel_size=3, activation='relu'))
+model.add(MaxPooling1D(pool_size=2))
+model.add(Dropout(0.25))
+model.add(Flatten())
+model.add(Dense(units=128, activation='relu'))
+model.add(Dropout(0.25))
 model.add(Dense(units=1, activation='sigmoid')) #T/F
 
 model.compile(optimizer='adam', loss='binary_crossentropy', metrics=metrics)

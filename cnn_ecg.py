@@ -41,6 +41,7 @@ ses = np.array([(x - se_mean) / se_std for x in ses])
 
 # print(tdfs.shape, ses.shape)
 features = np.stack((tdfs, ses), axis=-1)
+print(features.shape)
 
 
 # splits
@@ -58,6 +59,10 @@ model.add(MaxPooling1D(pool_size=2))
 model.add(Dropout(0.25))
 print("64")
 model.add(Conv1D(filters=64, kernel_size=3, activation='relu'))
+model.add(MaxPooling1D(pool_size=2))
+model.add(Dropout(0.25))
+print("128")
+model.add(Conv1D(filters=128, kernel_size=3, activation='relu'))
 model.add(MaxPooling1D(pool_size=2))
 model.add(Dropout(0.25))
 model.add(Flatten())
