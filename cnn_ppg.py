@@ -25,10 +25,10 @@ metrics = [
 
 # # feature extraction
 # # ppg instantaneous frequencies (time-dependent)
-# tdfs = np.array([preprocess_ppg.time_dependent_frequency(ppg, sample_rate) for ppg in ppgs])
-# tdf_mean = np.mean(tdfs)
-# tdf_std = np.std(tdfs)
-# tdfs = np.array([(x - tdf_mean) / tdf_std for x in tdfs])
+# infs = np.array([preprocess_ppg.time_dependent_frequency(ppg, sample_rate) for ppg in ppgs])
+# inf_mean = np.mean(infs)
+# inf_std = np.std(infs)
+# infs = np.array([(x - inf_mean) / inf_std for x in infs])
 
 # # ppg spectral entropies
 # ses = np.array([preprocess_ppg.spectral_entropy(ppg, sample_rate) for ppg in ppgs])
@@ -36,8 +36,8 @@ metrics = [
 # se_std = np.std(ses)
 # ses = np.array([(x - se_mean) / se_std for x in ses])
 
-# print(tdfs.shape, ses.shape)
-# features = np.stack((tdfs, ses), axis=-1)
+# print(infs.shape, ses.shape)
+# features = np.stack((infs, ses), axis=-1)
 # print(features.shape)
 
 # get generated data
@@ -45,15 +45,21 @@ print("generated")
 ppgs, labels, sample_rate = preprocess_ppg.large_data(signal_length)
 ppgs, labels = np.array(ppgs), np.array(labels)
 
+# feature extraction
+fft1s = np.array([preprocess_ppg.fft(ppg, sample_rate) for ppg in ppgs])
+fft2s = np.array([preprocess_ppg.fft(ppg, sample_rate) for ppg in ppgs])
+ffts = fft1s.swapaxes(1, 2)
+print(ffts.shape)
+
 # ppg instantaneous frequencies (time-dependent)
-tdf1s = np.array([preprocess_ppg.time_dependent_frequency(ppg[0], sample_rate) for ppg in ppgs])
-tdf_mean = np.mean(tdf1s)
-tdf_std = np.std(tdf1s)
-tdf1s = np.array([(x - tdf_mean) / tdf_std for x in tdf1s])
-tdf2s = np.array([preprocess_ppg.time_dependent_frequency(ppg[1], sample_rate) for ppg in ppgs])
-tdf_mean = np.mean(tdf2s)
-tdf_std = np.std(tdf2s)
-tdf2s = np.array([(x - tdf_mean) / tdf_std for x in tdf2s])
+inf1s = np.array([preprocess_ppg.time_dependent_frequency(ppg[0], sample_rate) for ppg in ppgs])
+inf_mean = np.mean(inf1s)
+inf_std = np.std(inf1s)
+inf1s = np.array([(x - inf_mean) / inf_std for x in inf1s])
+inf2s = np.array([preprocess_ppg.time_dependent_frequency(ppg[1], sample_rate) for ppg in ppgs])
+inf_mean = np.mean(inf2s)
+inf_std = np.std(inf2s)
+inf2s = np.array([(x - inf_mean) / inf_std for x in inf2s])
 
 # ppg spectral entropies
 se1s = np.array([preprocess_ppg.spectral_entropy(ppg[0], sample_rate) for ppg in ppgs])
@@ -65,23 +71,23 @@ se_mean = np.mean(se2s)
 se_std = np.std(se2s)
 se2s = np.array([(x - se_mean) / se_std for x in se2s])
 
-print(tdf1s.shape, tdf2s.shape, se1s.shape, se2s.shape)
-tdfs = np.concatenate((tdf1s, tdf2s))
+print(inf1s.shape, inf2s.shape, se1s.shape, se2s.shape)
+infs = np.concatenate((inf1s, inf2s))
 ses = np.concatenate((se1s, se2s))
-features = np.stack((tdfs, ses), axis=-1)
+features = np.stack((infs, ses), axis=-1)
 print(features.shape)
-labels = np.concatenate((labels, labels))
+# labels = np.concatenate((labels, labels))
       
 
 # splits
-feature_train, feature_test, feature_label_train, feature_label_test = train_test_split(features, labels, test_size=0.2)
+feature_train, feature_test, feature_label_train, feature_label_test = train_test_split(ffts, labels, test_size=0.2)
 feature_train, feature_val, feature_label_train, feature_label_val = train_test_split(feature_train, feature_label_train, test_size=0.2)
 print((feature_train.shape), (feature_val.shape), (feature_test.shape))
 print((feature_label_train.shape), (feature_label_val.shape), (feature_label_test.shape))
 
 
 model = Sequential()
-model.add(Input(shape=(len(features[0]), 2)))
+model.add(Input(shape=(len(ffts[0]), 2)))
 print("32")
 model.add(Conv1D(filters=32, kernel_size=3, activation='relu'))
 model.add(MaxPooling1D(pool_size=2))

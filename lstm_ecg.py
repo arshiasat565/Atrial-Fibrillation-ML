@@ -29,10 +29,10 @@ ecgs, labels, sample_rate = preprocess_ecg.large_data(signal_length)
 
 # feature extraction
 # ecg instantaneous frequencies (time-dependent)
-tdfs = np.array([preprocess_ecg.time_dependent_frequency(ecg, sample_rate) for ecg in ecgs])
-tdf_mean = np.mean(tdfs)
-tdf_std = np.std(tdfs)
-tdfs = np.array([(x - tdf_mean) / tdf_std for x in tdfs])
+infs = np.array([preprocess_ecg.time_dependent_frequency(ecg, sample_rate) for ecg in ecgs])
+inf_mean = np.mean(infs)
+inf_std = np.std(infs)
+infs = np.array([(x - inf_mean) / inf_std for x in infs])
 
 # ecg spectral entropies
 ses = np.array([preprocess_ecg.spectral_entropy(ecg, sample_rate) for ecg in ecgs])
@@ -40,8 +40,8 @@ se_mean = np.mean(ses)
 se_std = np.std(ses)
 ses = np.array([(x - se_mean) / se_std for x in ses])
 
-print(tdfs.shape, ses.shape)
-features = np.stack((tdfs, ses), axis=-1)
+print(infs.shape, ses.shape)
+features = np.stack((infs, ses), axis=-1)
 
 
 # splits

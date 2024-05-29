@@ -22,16 +22,21 @@ metrics = [
 # print("patient")
 # ecgs, times, Rpeak_intvs, segment_labels, interval_labels, sample_rate = preprocess_ecg.data_init(min_freq, max_freq, length)
 # labels = np.array(segment_labels)
+# print(labels.shape)
 
 # get generated data
 print("generated")
 ecgs, labels, sample_rate = preprocess_ecg.large_data(signal_length)
 
+# feature extraction
+ffts = np.array([preprocess_ecg.fft(ecg, sample_rate) for ecg in ecgs])
+print(ffts.shape)
+
 # ecg instantaneous frequencies (time-dependent)
-tdfs = np.array([preprocess_ecg.time_dependent_frequency(ecg, sample_rate) for ecg in ecgs])
-tdf_mean = np.mean(tdfs)
-tdf_std = np.std(tdfs)
-tdfs = np.array([(x - tdf_mean) / tdf_std for x in tdfs])
+infs = np.array([preprocess_ecg.time_dependent_frequency(ecg, sample_rate) for ecg in ecgs])
+inf_mean = np.mean(infs)
+inf_std = np.std(infs)
+infs = np.array([(x - inf_mean) / inf_std for x in infs])
 
 # ecg spectral entropies
 ses = np.array([preprocess_ecg.spectral_entropy(ecg, sample_rate) for ecg in ecgs])
@@ -39,20 +44,20 @@ se_mean = np.mean(ses)
 se_std = np.std(ses)
 ses = np.array([(x - se_mean) / se_std for x in ses])
 
-# print(tdfs.shape, ses.shape)
-features = np.stack((tdfs, ses), axis=-1)
+# print(infs.shape, ses.shape)
+features = np.stack((infs, ses), axis=-1)
 print(features.shape)
 
 
 # splits
-feature_train, feature_test, feature_label_train, feature_label_test = train_test_split(features, labels, test_size=0.2)
+feature_train, feature_test, feature_label_train, feature_label_test = train_test_split(ffts, labels, test_size=0.2)
 feature_train, feature_val, feature_label_train, feature_label_val = train_test_split(feature_train, feature_label_train, test_size=0.2)
 print((feature_train.shape), (feature_val.shape), (feature_test.shape))
 print((feature_label_train.shape), (feature_label_val.shape), (feature_label_test.shape))
 
 
 model = Sequential()
-model.add(Input(shape=(len(features[0]), 2)))
+model.add(Input(shape=(len(ffts[0]), 1)))
 print("32")
 model.add(Conv1D(filters=32, kernel_size=3, activation='relu'))
 model.add(MaxPooling1D(pool_size=2))
