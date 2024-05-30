@@ -38,19 +38,16 @@ def cross_val(clas, ecgs, labels, cv, scoring, return_train_score):
 # get patient data
 ecgs, times, Rpeak_intvs, segment_labels, interval_labels, sample_rate = preprocess_ecg.data_init(min_freq, max_freq, length)
 
-# length_sec = length / sample_rate
-# # split ecg
-# print(f"\nBy {length_sec}s ecg samples")
-# print("sample count:", len(ecgs))
+print("svm")
+clas = svm.SVC(kernel="rbf", probability=True, C=1, gamma=0.001) #optimised rbf params C:[1, 10, 100]
+length_sec = length / sample_rate
+# split ecg
+print(f"\nBy {length_sec}s ecg samples")
+print("sample count:", len(ecgs))
 
-# # 10 fold cross validation svm, use ecg samples
-# # kfold
-# kf = KFold(n_splits=10, shuffle=True)
-# cross_val(clas, ecgs, segment_labels, kf, scoring, show_training) #67%acc
-
-# # shuffle
-# shuffle_split = ShuffleSplit(n_splits=10)
-# cross_val(clas, ecgs, segment_labels, shuffle_split, scoring, show_training) #67%acc
+# 10 fold cross validation svm, use ecg samples
+shuffle_split = ShuffleSplit(n_splits=10)
+cross_val(clas, ecgs, segment_labels, shuffle_split, scoring, show_training) #67%acc
 
 
 # split Rpeak_intvs
@@ -69,12 +66,6 @@ for i, Rpeak_intv in enumerate(Rpeak_intvs):
 print("sample count:", len(intv_samples))
 
 # 10 fold cross validation svm, use Rpeak_intv samples
-clas = svm.SVC(kernel="rbf", probability=True, C=1, gamma=0.001) #optimised rbf params C:[1, 10, 100]
-# kfold
-kf = KFold(n_splits=10, shuffle=True)
-cross_val(clas, intv_samples, sample_labels, kf, scoring, show_training) #90%acc w rbf params
-
-# shuffle
 shuffle_split = ShuffleSplit(n_splits=10)
 cross_val(clas, intv_samples, sample_labels, shuffle_split, scoring, show_training) #90%acc w rbf params
 

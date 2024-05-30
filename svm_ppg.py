@@ -39,19 +39,16 @@ def cross_val(clas, ppgs, labels, cv, scoring, return_train_score):
 # get patient data
 ppgs, times, Rpeak_intvs, segment_labels, interval_labels, sample_rate = preprocess_ppg.data_init(min_freq, max_freq, length)
 
-# length_sec = length / sample_rate
-# # split ppg
-# print(f"\nBy {length_sec}s ppg samples")
-# print("sample count:", len(ppgs))
+print("svm")
+clas = svm.SVC(kernel="rbf", probability=True, C=1, gamma=0.001) #optimised rbf params
+length_sec = length / sample_rate
+# split ppg
+print(f"\nBy {length_sec}s ppg samples")
+print("sample count:", len(ppgs))
 
-# # 10 fold cross validation svm, use ppg samples
-# # kfold
-# kf = KFold(n_splits=10, shuffle=True)
-# cross_val(clas, ppgs, segment_labels, kf, scoring, show_training) #67%acc
-
-# # shuffle
-# shuffle_split = ShuffleSplit(n_splits=10)
-# cross_val(clas, ppgs, segment_labels, shuffle_split, scoring, show_training) #67%acc
+# 10 fold cross validation svm, use ppg samples
+shuffle_split = ShuffleSplit(n_splits=10)
+cross_val(clas, ppgs, segment_labels, shuffle_split, scoring, show_training) #67%acc
 
 # split Rpeak_intvs
 print("\nBy Rpeak_intv samples")
@@ -68,12 +65,6 @@ for i, Rpeak_intv in enumerate(Rpeak_intvs):
 print("sample count:", len(intv_samples))
 
 # 10 fold cross validation svm, use Rpeak_intv samples
-clas = svm.SVC(kernel="rbf", probability=True, C=1, gamma=0.001) #optimised rbf params
-# kfold
-kf = KFold(n_splits=10, shuffle=True)
-cross_val(clas, intv_samples, sample_labels, kf, scoring, show_training) #90%acc w rbf params
-
-# shuffle
 shuffle_split = ShuffleSplit(n_splits=10)
 cross_val(clas, intv_samples, sample_labels, shuffle_split, scoring, show_training) #90%acc w rbf params
 
