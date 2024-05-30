@@ -42,7 +42,7 @@ metrics = [
 
 # get generated data
 print("generated")
-ppgs, labels, sample_rate = preprocess_ppg.large_data(signal_length)
+ppgs, labels, Rpeak_intvs, sample_rate = preprocess_ppg.large_data(signal_length)
 ppgs, labels = np.array(ppgs), np.array(labels)
 
 # feature extraction

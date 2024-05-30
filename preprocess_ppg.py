@@ -242,11 +242,13 @@ def large_data(signal_length, size=None):
     sample_rate = 250
     af_models = glob.glob('model/1/*.mat')
     non_af_models = glob.glob('model/0/*.mat')
+    time = pd.Series(np.linspace(0, signal_length / sample_rate, signal_length, endpoint=False))
 
     signal_labels = []
     parameters = []
     ppgs = []
     labels = []
+    Rpeak_intvs = []
 
     # print("1")
     # data init
@@ -261,6 +263,9 @@ def large_data(signal_length, size=None):
         ppg2 = flatten_filter(ppg[1], 1, 40, sample_rate=sample_rate)
         ppg = np.stack((ppg1, ppg2))
         ppgs.append(ppg)
+        Rpeak_intv1 = Rpeak_intervals([ppg1], [time])
+        Rpeak_intv2 = Rpeak_intervals([ppg2], [time])
+        Rpeak_intvs.append(np.stack((Rpeak_intv1, Rpeak_intv2)))
         labels.append(True)
         
     if size != None:
@@ -278,6 +283,9 @@ def large_data(signal_length, size=None):
         ppg2 = flatten_filter(ppg[1], 1, 40, sample_rate=sample_rate)
         ppg = np.stack((ppg1, ppg2))
         ppgs.append(ppg)
+        Rpeak_intv1 = Rpeak_intervals([ppg1], [time])
+        Rpeak_intv2 = Rpeak_intervals([ppg2], [time])
+        Rpeak_intvs.append(np.stack((Rpeak_intv1, Rpeak_intv2)))
         labels.append(False)
         
     if size != None:
@@ -288,4 +296,4 @@ def large_data(signal_length, size=None):
 
     labels = np.array(labels)
     labels = labels.reshape(len(labels), 1)
-    return ppgs, labels, sample_rate
+    return ppgs, labels, Rpeak_intvs, sample_rate

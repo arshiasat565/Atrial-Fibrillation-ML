@@ -26,7 +26,7 @@ metrics = [
 
 # get generated data
 print("generated")
-ecgs, labels, sample_rate = preprocess_ecg.large_data(signal_length)
+ecgs, labels, Rpeak_intvs, sample_rate = preprocess_ecg.large_data(signal_length)
 
 # feature extraction
 ffts = np.array([preprocess_ecg.fft(ecg, sample_rate) for ecg in ecgs])

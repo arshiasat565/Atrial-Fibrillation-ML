@@ -238,11 +238,13 @@ def large_data(signal_length, size=None):
     sample_rate = 250
     af_models = glob.glob('model/1/*.mat')
     non_af_models = glob.glob('model/0/*.mat')
+    time = pd.Series(np.linspace(0, signal_length / sample_rate, signal_length, endpoint=False))
 
     signal_labels = []
     parameters = []
     ecgs = []
     labels = []
+    Rpeak_intvs = []
 
     # print("1")
     # data init
@@ -260,8 +262,9 @@ def large_data(signal_length, size=None):
         ecg = ecg.reshape(len(ecg))
         ecg = flatten_filter(ecg, 1, 40, sample_rate=sample_rate)
         ecgs.append(ecg)
-
+        Rpeak_intvs.append(Rpeak_intervals([ecg], [time]))
         labels.append(True)
+
     if size != None:
         ecgs = ecgs[:size//2]
         labels = labels[:size//2]
@@ -280,8 +283,9 @@ def large_data(signal_length, size=None):
         ecg = ecg.reshape(len(ecg))
         ecg = flatten_filter(ecg, 1, 40, sample_rate=sample_rate)
         ecgs.append(ecg)
-
+        Rpeak_intvs.append(Rpeak_intervals([ecg], [time]))
         labels.append(False)
+
     if size != None:
         ecgs = ecgs[:size]
         labels = labels[:size]
@@ -290,4 +294,4 @@ def large_data(signal_length, size=None):
 
     labels = np.array(labels)
     labels = labels.reshape(len(labels), 1)
-    return ecgs, labels, sample_rate
+    return ecgs, labels, Rpeak_intvs, sample_rate
