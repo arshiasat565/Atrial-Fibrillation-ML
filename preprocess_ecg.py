@@ -6,6 +6,10 @@ import scipy.signal as sps
 import matplotlib.pyplot as plt
 import glob
 import lab_funcs_ecg
+from sklearn.model_selection import train_test_split
+import keras.metrics as km
+from keras.models import Sequential
+from keras.layers import Input
 
 
 def bandpass(data: np.ndarray, edges: list[float], sample_rate: float, poles: int = 5):
@@ -149,6 +153,7 @@ def data_init(min_freq, max_freq, length, start = 0):
     segment_labels = []
     interval_labels = []
 
+    print("database")
     # interpolate and bandpass ecgs
     for csv in af_csv:
         df = pd.read_csv(csv)
@@ -246,7 +251,7 @@ def large_data(signal_length, size=None):
     labels = []
     Rpeak_intvs = []
 
-    # print("1")
+    print("generated 1")
     # data init
     for model in af_models:
         data = scipy.io.loadmat(model)
@@ -293,5 +298,92 @@ def large_data(signal_length, size=None):
     # print(len(ecgs))
 
     labels = np.array(labels)
-    labels = labels.reshape(len(labels), 1)
+    # labels = labels.reshape(len(labels), 1)
     return ecgs, labels, Rpeak_intvs, sample_rate
+
+def feature_extraction(ecgs, sample_rate):
+    # feature extraction
+    ffts = np.array([fft(ecg, sample_rate) for ecg in ecgs])
+    print(ffts.shape)
+
+    # ecg instantaneous frequencies (time-dependent)
+    infs = np.array([time_dependent_frequency(ecg, sample_rate) for ecg in ecgs])
+    inf_mean = np.mean(infs)
+    inf_std = np.std(infs)
+    infs = np.array([(x - inf_mean) / inf_std for x in infs])
+
+    # ecg spectral entropies
+    ses = np.array([spectral_entropy(ecg, sample_rate) for ecg in ecgs])
+    se_mean = np.mean(ses)
+    se_std = np.std(ses)
+    ses = np.array([(x - se_mean) / se_std for x in ses])
+
+    return ffts, infs, ses
+
+def split_Rpeak_intvs(Rpeak_intvs, labels):
+    # split Rpeak_intvs
+    print("\nBy Rpeak_intv samples")
+    sample_size = 10
+    intv_samples = []
+    sample_labels = []
+
+    for i, Rpeak_intv in enumerate(Rpeak_intvs):
+        for j in range(0, len(Rpeak_intv), sample_size):
+            intv_sample = Rpeak_intv[j:j+sample_size]
+            # print(len(ecg_sample))
+            if len(intv_sample) == sample_size:
+                intv_samples.append(intv_sample)
+                sample_labels.append(labels[i])
+    print("sample count:", len(intv_samples))
+
+    return(intv_samples, sample_labels)
+
+def split_dataset(features, labels):
+    features, labels = np.array(features), np.array(labels)
+    feature_train, feature_test, feature_label_train, feature_label_test = train_test_split(features, labels, test_size=0.2)
+    feature_train, feature_val, feature_label_train, feature_label_val = train_test_split(feature_train, feature_label_train, test_size=0.2)
+    print((feature_train.shape), (feature_val.shape), (feature_test.shape))
+    print((feature_label_train.shape), (feature_label_val.shape), (feature_label_test.shape))
+
+    if features.ndim > 2:
+        num = features.shape[2]
+    else:
+        num = 1
+    model = Sequential()
+    model.add(Input(shape=(features.shape[1], num)))
+
+    return model, (feature_train, feature_val, feature_test, feature_label_train, feature_label_val, feature_label_test)
+
+def f1_score(precision, recall):
+    return 2 * precision * recall / (precision + recall)
+
+metrics = [
+    'accuracy', 'precision', 'recall', km.AUC(curve='ROC')
+]
+
+def model_fit(model, feature_labels):
+    feature_train, feature_val, feature_test, feature_label_train, feature_label_val, feature_label_test = feature_labels
+
+    accs = []
+    losses = []
+    results = []
+    for i in range(10):
+        model.fit(feature_train, feature_label_train, validation_data=(feature_val, feature_label_val), epochs=100, verbose=0)
+
+        result = model.evaluate(feature_test, feature_label_test, verbose=1)
+        result.append(f1_score(result[2], result[3]))
+        # print(result)
+        results.append(result)
+
+    metric_names = np.concatenate((['loss'], metrics, ['f1_score']))
+    np.set_printoptions(suppress=True)
+    avg_results = np.average(results, axis=0)
+    print("Average metrics:")
+    for name, value in zip(metric_names, avg_results):
+        print(f'{name}: {value:.4f}')
+
+    #     loss, accuracy = model.evaluate(feature_test, feature_label_test)
+    #     print(f'Test Loss: {loss}, Test Accuracy: {accuracy}')
+    #     losses.append(loss)
+    #     accs.append(accuracy)
+    # print(np.average(losses), np.average(accs))

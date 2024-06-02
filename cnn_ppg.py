@@ -10,123 +10,105 @@ min_freq = 0.5
 max_freq = 5
 length = 3750 # 30 secs (125Hz data_init csv)
 
-def f1_score(precision, recall):
-    return 2 * precision * recall / (precision + recall)
+def cnn_model(model):
+    print("32")
+    model.add(Conv1D(filters=32, kernel_size=3, activation='relu'))
+    model.add(MaxPooling1D(pool_size=2))
+    model.add(Dropout(0.25))
+    print("64")
+    model.add(Conv1D(filters=64, kernel_size=3, activation='relu'))
+    model.add(MaxPooling1D(pool_size=2))
+    model.add(Dropout(0.25))
+    print("128")
+    model.add(Conv1D(filters=128, kernel_size=3, activation='relu'))
+    model.add(MaxPooling1D(pool_size=2))
+    model.add(Dropout(0.25))
+    model.add(Flatten())
+    model.add(Dense(units=128, activation='relu'))
+    model.add(Dropout(0.25))
+    model.add(Dense(units=1, activation='sigmoid')) #T/F
 
-metrics = [
-    'accuracy', 'precision', 'recall', km.AUC(curve='ROC')
-]
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=preprocess_ppg.metrics)
 
+    return model
 
+print("cnn")
 # # get patient data
-# print("patient")
 # ppgs, times, Rpeak_intvs, segment_labels, interval_labels, sample_rate = preprocess_ppg.data_init(min_freq, max_freq, length)
 # labels = np.array(segment_labels)
 
-# # feature extraction
-# # ppg instantaneous frequencies (time-dependent)
-# infs = np.array([preprocess_ppg.time_dependent_frequency(ppg, sample_rate) for ppg in ppgs])
-# inf_mean = np.mean(infs)
-# inf_std = np.std(infs)
-# infs = np.array([(x - inf_mean) / inf_std for x in infs])
+# print("ppg signals")
+# model, feature_labels = preprocess_ppg.split_dataset(ppgs, labels)
+# model = cnn_model(model)
+# preprocess_ppg.model_fit(model, feature_labels)
 
-# # ppg spectral entropies
-# ses = np.array([preprocess_ppg.spectral_entropy(ppg, sample_rate) for ppg in ppgs])
-# se_mean = np.mean(ses)
-# se_std = np.std(ses)
-# ses = np.array([(x - se_mean) / se_std for x in ses])
+# intv_samples, sample_labels = preprocess_ppg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
 
-# print(infs.shape, ses.shape)
+# print("Rpeak_intvs")
+# model, feature_labels = preprocess_ppg.split_dataset(intv_samples, sample_labels)
+# model = cnn_model(model)
+# preprocess_ppg.model_fit(model, feature_labels)
+
+# ffts, infs, ses = preprocess_ppg.feature_extraction_db(ppgs, sample_rate)
 # features = np.stack((infs, ses), axis=-1)
 # print(features.shape)
 
+# print("ffts")
+# model, feature_labels = preprocess_ppg.split_dataset(ffts, labels)
+# model = cnn_model(model)
+# preprocess_ppg.model_fit(model, feature_labels)
+
+# print("infs")
+# model, feature_labels = preprocess_ppg.split_dataset(infs, labels)
+# model = cnn_model(model)
+# preprocess_ppg.model_fit(model, feature_labels)
+
+# print("ses")
+# model, feature_labels = preprocess_ppg.split_dataset(ses, labels)
+# model = cnn_model(model)
+# preprocess_ppg.model_fit(model, feature_labels)
+
+# print("infs & ses")
+# model, feature_labels = preprocess_ppg.split_dataset(features, labels)
+# model = cnn_model(model)
+# preprocess_ppg.model_fit(model, feature_labels)
+
+
 # get generated data
-print("generated")
 ppgs, labels, Rpeak_intvs, sample_rate = preprocess_ppg.large_data(signal_length)
-ppgs, labels = np.array(ppgs), np.array(labels)
 
-# feature extraction
-fft1s = np.array([preprocess_ppg.fft(ppg, sample_rate) for ppg in ppgs])
-fft2s = np.array([preprocess_ppg.fft(ppg, sample_rate) for ppg in ppgs])
-ffts = fft1s.swapaxes(1, 2)
-print(ffts.shape)
+# print("ppg signals")
+# model, feature_labels = preprocess_ppg.split_dataset(ppgs, labels)
+# model = cnn_model(model)
+# preprocess_ppg.model_fit(model, feature_labels)
 
-# ppg instantaneous frequencies (time-dependent)
-inf1s = np.array([preprocess_ppg.time_dependent_frequency(ppg[0], sample_rate) for ppg in ppgs])
-inf_mean = np.mean(inf1s)
-inf_std = np.std(inf1s)
-inf1s = np.array([(x - inf_mean) / inf_std for x in inf1s])
-inf2s = np.array([preprocess_ppg.time_dependent_frequency(ppg[1], sample_rate) for ppg in ppgs])
-inf_mean = np.mean(inf2s)
-inf_std = np.std(inf2s)
-inf2s = np.array([(x - inf_mean) / inf_std for x in inf2s])
+# intv_samples, sample_labels = preprocess_ppg.split_Rpeak_intvs(Rpeak_intvs, labels)
 
-# ppg spectral entropies
-se1s = np.array([preprocess_ppg.spectral_entropy(ppg[0], sample_rate) for ppg in ppgs])
-se_mean = np.mean(se1s)
-se_std = np.std(se1s)
-se1s = np.array([(x - se_mean) / se_std for x in se1s])
-se2s = np.array([preprocess_ppg.spectral_entropy(ppg[1], sample_rate) for ppg in ppgs])
-se_mean = np.mean(se2s)
-se_std = np.std(se2s)
-se2s = np.array([(x - se_mean) / se_std for x in se2s])
+# print("Rpeak_intvs")
+# model, feature_labels = preprocess_ppg.split_dataset(intv_samples, sample_labels)
+# model = cnn_model(model)
+# preprocess_ppg.model_fit(model, feature_labels)
 
-print(inf1s.shape, inf2s.shape, se1s.shape, se2s.shape)
-infs = np.concatenate((inf1s, inf2s))
-ses = np.concatenate((se1s, se2s))
+ffts, infs, ses, labels = preprocess_ppg.feature_extraction_gen(ppgs, labels, sample_rate)
 features = np.stack((infs, ses), axis=-1)
 print(features.shape)
-# labels = np.concatenate((labels, labels))
-      
 
-# splits
-feature_train, feature_test, feature_label_train, feature_label_test = train_test_split(ffts, labels, test_size=0.2)
-feature_train, feature_val, feature_label_train, feature_label_val = train_test_split(feature_train, feature_label_train, test_size=0.2)
-print((feature_train.shape), (feature_val.shape), (feature_test.shape))
-print((feature_label_train.shape), (feature_label_val.shape), (feature_label_test.shape))
+print("ffts")
+model, feature_labels = preprocess_ppg.split_dataset(ffts, labels)
+model = cnn_model(model)
+preprocess_ppg.model_fit(model, feature_labels)
 
+print("infs")
+model, feature_labels = preprocess_ppg.split_dataset(infs, labels)
+model = cnn_model(model)
+preprocess_ppg.model_fit(model, feature_labels)
 
-model = Sequential()
-model.add(Input(shape=(len(ffts[0]), 2)))
-print("32")
-model.add(Conv1D(filters=32, kernel_size=3, activation='relu'))
-model.add(MaxPooling1D(pool_size=2))
-model.add(Dropout(0.25))
-print("64")
-model.add(Conv1D(filters=64, kernel_size=3, activation='relu'))
-model.add(MaxPooling1D(pool_size=2))
-model.add(Dropout(0.25))
-print("128")
-model.add(Conv1D(filters=128, kernel_size=3, activation='relu'))
-model.add(MaxPooling1D(pool_size=2))
-model.add(Dropout(0.25))
-model.add(Flatten())
-model.add(Dense(units=128, activation='relu'))
-model.add(Dropout(0.25))
-model.add(Dense(units=1, activation='sigmoid')) #T/F
+print("ses")
+model, feature_labels = preprocess_ppg.split_dataset(ses, labels)
+model = cnn_model(model)
+preprocess_ppg.model_fit(model, feature_labels)
 
-model.compile(optimizer='adam', loss='binary_crossentropy', metrics=metrics)
-
-accs = []
-losses = []
-results = []
-for i in range(10):
-    model.fit(feature_train, feature_label_train, validation_data=(feature_val, feature_label_val), epochs=100, verbose=0)
-
-    result = model.evaluate(feature_test, feature_label_test)
-    result.append(f1_score(result[2], result[3]))
-    # print(result)
-    results.append(result)
-
-metric_names = np.concatenate((['loss'], metrics, ['f1_score']))
-np.set_printoptions(suppress=True)
-avg_results = np.average(results, axis=0)
-print("Average metrics:")
-for name, value in zip(metric_names, avg_results):
-    print(f'{name}: {value:.4f}')
-
-#     loss, accuracy = model.evaluate(feature_test, feature_label_test)
-#     print(f'Test Loss: {loss}, Test Accuracy: {accuracy}')
-#     losses.append(loss)
-#     accs.append(accuracy)
-# print(np.average(losses), np.average(accs))
+print("infs & ses")
+model, feature_labels = preprocess_ppg.split_dataset(features, labels)
+model = cnn_model(model)
+preprocess_ppg.model_fit(model, feature_labels)

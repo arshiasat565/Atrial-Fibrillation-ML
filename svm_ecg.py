@@ -23,10 +23,11 @@ scoring = {
 }
 show_training = False
 
+signal_length = 7500 # 30 secs (250Hz large_data mat)
 min_freq = 5
 max_freq = 40
 start = 0
-length = 3750 # 30 secs
+length = 3750 # 30 secs (125Hz data_init csv)
 
 def cross_val(clas, ecgs, labels, cv, scoring, return_train_score):
     print(f"{cv} Cross-Validation:")
@@ -35,10 +36,11 @@ def cross_val(clas, ecgs, labels, cv, scoring, return_train_score):
     for metric_name, score in score_list:
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
 
+print("svm")
 # get patient data
 ecgs, times, Rpeak_intvs, segment_labels, interval_labels, sample_rate = preprocess_ecg.data_init(min_freq, max_freq, length)
+labels = np.array(segment_labels)
 
-print("svm")
 clas = svm.SVC(kernel="rbf", probability=True, C=1, gamma=0.001) #optimised rbf params C:[1, 10, 100]
 length_sec = length / sample_rate
 # split ecg
@@ -49,25 +51,22 @@ print("sample count:", len(ecgs))
 shuffle_split = ShuffleSplit(n_splits=10)
 cross_val(clas, ecgs, segment_labels, shuffle_split, scoring, show_training) #67%acc
 
-
-# split Rpeak_intvs
-print("\nBy Rpeak_intv samples")
-sample_size = 10
-intv_samples = []
-sample_labels = []
-
-for i, Rpeak_intv in enumerate(Rpeak_intvs):
-    for j in range(0, len(Rpeak_intv), sample_size):
-        intv_sample = Rpeak_intv[j:j+sample_size]
-        # print(len(ecg_sample))
-        if len(intv_sample) == sample_size:
-            intv_samples.append(intv_sample)
-            sample_labels.append(interval_labels[i])
-print("sample count:", len(intv_samples))
+intv_samples, sample_labels = preprocess_ecg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
 
 # 10 fold cross validation svm, use Rpeak_intv samples
-shuffle_split = ShuffleSplit(n_splits=10)
 cross_val(clas, intv_samples, sample_labels, shuffle_split, scoring, show_training) #90%acc w rbf params
+
+ffts, infs, ses = preprocess_ecg.feature_extraction(ecgs, sample_rate)
+
+print("ffts")
+cross_val(clas, ffts, labels, shuffle_split, scoring, show_training)
+
+print("infs")
+cross_val(clas, infs, labels, shuffle_split, scoring, show_training)
+
+print("ses")
+cross_val(clas, ses, labels, shuffle_split, scoring, show_training)
+
 
 # # diff train test split changes accuracy by ±1%
 
@@ -80,3 +79,30 @@ cross_val(clas, intv_samples, sample_labels, shuffle_split, scoring, show_traini
 #     accuracy = accuracy_score(segment_labels_test, segment_labels_pred)
 #     print(accuracy)
 
+ecgs, labels, Rpeak_intvs, sample_rate = preprocess_ecg.large_data(signal_length)
+
+clas = svm.SVC(kernel="rbf", probability=True, C=1, gamma=0.001) #TODO optimised rbf params C:[1, 10, 100]
+length_sec = signal_length / sample_rate
+# split ecg
+print(f"\nBy {length_sec}s ecg samples")
+print("sample count:", len(ecgs))
+
+# 10 fold cross validation svm, use ecg samples
+shuffle_split = ShuffleSplit(n_splits=10)
+cross_val(clas, ecgs, labels, shuffle_split, scoring, show_training) #TODO 67%acc
+
+intv_samples, sample_labels = preprocess_ecg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
+
+# 10 fold cross validation svm, use Rpeak_intv samples
+cross_val(clas, intv_samples, sample_labels, shuffle_split, scoring, show_training) #TODO 90%acc w rbf params
+
+ffts, infs, ses = preprocess_ecg.feature_extraction(ecgs, sample_rate)
+
+print("ffts")
+cross_val(clas, ffts, labels, shuffle_split, scoring, show_training)
+
+print("infs")
+cross_val(clas, infs, labels, shuffle_split, scoring, show_training)
+
+print("ses")
+cross_val(clas, ses, labels, shuffle_split, scoring, show_training)
