@@ -30,9 +30,11 @@ max_freq = 40
 start = 0
 length = 3750 # 30 secs (125Hz data_init csv)
 
+shuffle_split = ShuffleSplit(n_splits=10)
+
 def cross_val(clas, ecgs, labels, scoring, return_train_score):
     print("Cross-Validation:")
-    scores = cross_validate(clas, ecgs, labels, scoring=scoring, return_train_score=return_train_score)
+    scores = cross_validate(clas, ecgs, labels, cv=shuffle_split, scoring=scoring, return_train_score=return_train_score)
     score_list = list(scores.items())[2:]
     for metric_name, score in score_list:
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")

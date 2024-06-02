@@ -29,9 +29,11 @@ max_freq = 40
 start = 0
 length = 3750 # 30 secs (125Hz data_init csv)
 
-def cross_val(clas, ecgs, labels, cv, scoring, return_train_score):
-    print(f"{cv} Cross-Validation:")
-    scores = cross_validate(clas, ecgs, labels, cv=cv, scoring=scoring, return_train_score=return_train_score)
+shuffle_split = ShuffleSplit(n_splits=10)
+
+def cross_val(clas, ecgs, labels, scoring, return_train_score):
+    print("Cross-Validation:")
+    scores = cross_validate(clas, ecgs, labels, cv=shuffle_split, scoring=scoring, return_train_score=return_train_score)
     score_list = list(scores.items())[2:]
     for metric_name, score in score_list:
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
@@ -48,24 +50,23 @@ print(f"\nBy {length_sec}s ecg samples")
 print("sample count:", len(ecgs))
 
 # 10 fold cross validation svm, use ecg samples
-shuffle_split = ShuffleSplit(n_splits=10)
-cross_val(clas, ecgs, segment_labels, shuffle_split, scoring, show_training) #67%acc
+cross_val(clas, ecgs, segment_labels, scoring, show_training) #67%acc
 
 intv_samples, sample_labels = preprocess_ecg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
 
 # 10 fold cross validation svm, use Rpeak_intv samples
-cross_val(clas, intv_samples, sample_labels, shuffle_split, scoring, show_training) #90%acc w rbf params
+cross_val(clas, intv_samples, sample_labels, scoring, show_training) #90%acc w rbf params
 
 ffts, infs, ses = preprocess_ecg.feature_extraction(ecgs, sample_rate)
 
 print("ffts")
-cross_val(clas, ffts, labels, shuffle_split, scoring, show_training)
+cross_val(clas, ffts, labels, scoring, show_training)
 
 print("infs")
-cross_val(clas, infs, labels, shuffle_split, scoring, show_training)
+cross_val(clas, infs, labels, scoring, show_training)
 
 print("ses")
-cross_val(clas, ses, labels, shuffle_split, scoring, show_training)
+cross_val(clas, ses, labels, scoring, show_training)
 
 
 # # diff train test split changes accuracy by ±1%
@@ -89,20 +90,20 @@ print("sample count:", len(ecgs))
 
 # 10 fold cross validation svm, use ecg samples
 shuffle_split = ShuffleSplit(n_splits=10)
-cross_val(clas, ecgs, labels, shuffle_split, scoring, show_training) #TODO 67%acc
+cross_val(clas, ecgs, labels, scoring, show_training) #TODO 67%acc
 
 intv_samples, sample_labels = preprocess_ecg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
 
 # 10 fold cross validation svm, use Rpeak_intv samples
-cross_val(clas, intv_samples, sample_labels, shuffle_split, scoring, show_training) #TODO 90%acc w rbf params
+cross_val(clas, intv_samples, sample_labels, scoring, show_training) #TODO 90%acc w rbf params
 
 ffts, infs, ses = preprocess_ecg.feature_extraction(ecgs, sample_rate)
 
 print("ffts")
-cross_val(clas, ffts, labels, shuffle_split, scoring, show_training)
+cross_val(clas, ffts, labels, scoring, show_training)
 
 print("infs")
-cross_val(clas, infs, labels, shuffle_split, scoring, show_training)
+cross_val(clas, infs, labels, scoring, show_training)
 
 print("ses")
-cross_val(clas, ses, labels, shuffle_split, scoring, show_training)
+cross_val(clas, ses, labels, scoring, show_training)

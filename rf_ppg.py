@@ -30,9 +30,11 @@ max_freq = 5
 start = 0
 length = 3750 # 30 secs (125Hz data_init csv)
 
+shuffle_split = ShuffleSplit(n_splits=10)
+
 def cross_val(clas, ppgs, labels, scoring, return_train_score):
     print("Cross-Validation:")
-    scores = cross_validate(clas, ppgs, labels, scoring=scoring, return_train_score=return_train_score)
+    scores = cross_validate(clas, ppgs, labels, cv=shuffle_split, scoring=scoring, return_train_score=return_train_score)
     score_list = list(scores.items())[2:]
     for metric_name, score in score_list:
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
@@ -41,33 +43,33 @@ print("rf")
 # setup random forest model
 clas = RandomForestClassifier(n_estimators=100)
 
-# # get patient data
-# ppgs, times, Rpeak_intvs, segment_labels, interval_labels, sample_rate = preprocess_ppg.data_init(min_freq, max_freq, length)
+# get patient data
+ppgs, times, Rpeak_intvs, segment_labels, interval_labels, sample_rate = preprocess_ppg.data_init(min_freq, max_freq, length)
 
-# # split ppg
-# length_sec = length / sample_rate
-# print(f"\nBy {length_sec}s ppg samples")
-# print("sample count:", len(ppgs))
-# # 10 fold cross validation dt, use ppg samples
-# cross_val(clas, ppgs, segment_labels, scoring, show_training)
+# split ppg
+length_sec = length / sample_rate
+print(f"\nBy {length_sec}s ppg samples")
+print("sample count:", len(ppgs))
+# 10 fold cross validation dt, use ppg samples
+cross_val(clas, ppgs, segment_labels, scoring, show_training)
 
-# intv_samples, sample_labels = preprocess_ppg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
+intv_samples, sample_labels = preprocess_ppg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
 
-# # 10 fold cross validation dt, use Rpeak_intv samples
-# cross_val(clas, intv_samples, sample_labels, scoring, show_training)
+# 10 fold cross validation dt, use Rpeak_intv samples
+cross_val(clas, intv_samples, sample_labels, scoring, show_training)
 
-# ffts, infs, ses = preprocess_ppg.feature_extraction_db(ppgs, sample_rate)
-# features = np.stack((infs, ses), axis=-1)
-# print(features.shape)
+ffts, infs, ses = preprocess_ppg.feature_extraction_db(ppgs, sample_rate)
+features = np.stack((infs, ses), axis=-1)
+print(features.shape)
 
-# print("ffts")
-# cross_val(clas, ffts, segment_labels, scoring, show_training)
+print("ffts")
+cross_val(clas, ffts, segment_labels, scoring, show_training)
 
-# print("infs")
-# cross_val(clas, infs, segment_labels, scoring, show_training)
+print("infs")
+cross_val(clas, infs, segment_labels, scoring, show_training)
 
-# print("ses")
-# cross_val(clas, ses, segment_labels, scoring, show_training)
+print("ses")
+cross_val(clas, ses, segment_labels, scoring, show_training)
 
 
 # get generated data
