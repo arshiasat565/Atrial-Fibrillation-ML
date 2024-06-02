@@ -38,30 +38,62 @@ def cross_val(clas, ppgs, labels, scoring, return_train_score):
     for metric_name, score in score_list:
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
 
+print("knn")
+# setup k nearest neighbour model
+clas = KNeighborsClassifier(n_neighbors=5)
 
 # get patient data
 ppgs, times, Rpeak_intvs, segment_labels, interval_labels, sample_rate = preprocess_ppg.data_init(min_freq, max_freq, length)
 
-# feature extraction
-ffts = np.array([preprocess_ppg.fft(ppg, sample_rate) for ppg in ppgs])
+# split ppg
+length_sec = length / sample_rate
+print(f"\nBy {length_sec}s ppg samples")
+print("sample count:", len(ppgs))
+# 10 fold cross validation dt, use ppg samples
+cross_val(clas, ppgs, segment_labels, scoring, show_training)
 
-ffts_train, ffts_test, labels_train, labels_test = train_test_split(ffts, segment_labels, test_size=0.2)
+intv_samples, sample_labels = preprocess_ppg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
+
+# 10 fold cross validation dt, use Rpeak_intv samples
+cross_val(clas, intv_samples, sample_labels, scoring, show_training)
+
+ffts, infs, ses = preprocess_ppg.feature_extraction_db(ppgs, sample_rate)
+features = np.stack((infs, ses), axis=-1)
+print(features.shape)
+
+print("ffts")
+cross_val(clas, ffts, segment_labels, scoring, show_training)
+
+print("infs")
+cross_val(clas, infs, segment_labels, scoring, show_training)
+
+print("ses")
+cross_val(clas, ses, segment_labels, scoring, show_training)
 
 
-# setup k nearest neighbour model
-knn_classifier = KNeighborsClassifier(n_neighbors=5)
-knn_classifier.fit(ffts_train, labels_train)
+# get generated data
+ppgs, labels, Rpeak_intvs, interval_labels, sample_rate = preprocess_ppg.large_data(signal_length)
+labels = labels.ravel()
+flat_ppgs = np.concatenate((ppgs[:, 0, :], ppgs[:, 1, :]), axis=0)
+flat_labels = np.concatenate((labels, labels), axis=0)
 
-# Predict labels for testing data
-labels_pred = knn_classifier.predict(ffts_test)
+# 10 fold cross validation dt, use ppg samples
+cross_val(clas, flat_ppgs, flat_labels, scoring, show_training)
 
-# Evaluate performance
-accuracy = accuracy_score(labels_test, labels_pred)
-report = classification_report(labels_test, labels_pred)
+intv_samples, sample_labels = preprocess_ppg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
 
-print(f"{knn_classifier}")
-print("Accuracy:", accuracy)
-print("Classification Report:")
-print(report)
+# 10 fold cross validation dt, use Rpeak_intv samples
+cross_val(clas, intv_samples, sample_labels, scoring, show_training)
 
-cross_val(knn_classifier, ffts, segment_labels, scoring, show_training)
+ffts, infs, ses, labels = preprocess_ppg.feature_extraction_gen(ppgs, labels, sample_rate)
+features = np.stack((infs, ses), axis=-1)
+print(features.shape)
+
+print("ffts")
+cross_val(clas, ffts, labels, scoring, show_training)
+
+print("infs")
+cross_val(clas, infs, labels, scoring, show_training)
+
+print("ses")
+cross_val(clas, ses, labels, scoring, show_training)

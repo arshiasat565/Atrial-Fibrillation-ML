@@ -38,30 +38,59 @@ def cross_val(clas, ecgs, labels, scoring, return_train_score):
     for metric_name, score in score_list:
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
 
+print("knn")
+# setup k nearest neighbour model
+clas = KNeighborsClassifier(n_neighbors=5)
 
 # get patient data
 ecgs, times, Rpeak_intvs, segment_labels, interval_labels, sample_rate = preprocess_ecg.data_init(min_freq, max_freq, length)
 
-# feature extraction
-ffts = np.array([preprocess_ecg.fft(ecg, sample_rate) for ecg in ecgs])
+# split ecg
+length_sec = length / sample_rate
+print(f"\nBy {length_sec}s ecg samples")
+print("sample count:", len(ecgs))
+# 10 fold cross validation dt, use ecg samples
+cross_val(clas, ecgs, segment_labels, scoring, show_training)
 
-ffts_train, ffts_test, labels_train, labels_test = train_test_split(ffts, segment_labels, test_size=0.2)
+intv_samples, sample_labels = preprocess_ecg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
+
+# 10 fold cross validation dt, use Rpeak_intv samples
+cross_val(clas, intv_samples, sample_labels, scoring, show_training)
+
+ffts, infs, ses = preprocess_ecg.feature_extraction(ecgs, sample_rate)
+features = np.stack((infs, ses), axis=-1)
+print(features.shape)
+
+print("ffts")
+cross_val(clas, ffts, segment_labels, scoring, show_training)
+
+print("infs")
+cross_val(clas, infs, segment_labels, scoring, show_training)
+
+print("ses")
+cross_val(clas, ses, segment_labels, scoring, show_training)
 
 
-# setup k nearest neighbour model
-knn_classifier = KNeighborsClassifier(n_neighbors=5)
-knn_classifier.fit(ffts_train, labels_train)
+# get generated data
+ecgs, labels, Rpeak_intvs, sample_rate = preprocess_ecg.large_data(signal_length)
 
-# Predict labels for testing data
-labels_pred = knn_classifier.predict(ffts_test)
+# 10 fold cross validation dt, use ecg samples
+cross_val(clas, ecgs, labels, scoring, show_training)
 
-# Evaluate performance
-accuracy = accuracy_score(labels_test, labels_pred)
-report = classification_report(labels_test, labels_pred)
+intv_samples, sample_labels = preprocess_ecg.split_Rpeak_intvs(Rpeak_intvs, labels)
 
-print(f"{knn_classifier}")
-print("Accuracy:", accuracy)
-print("Classification Report:")
-print(report)
+# 10 fold cross validation dt, use Rpeak_intv samples
+cross_val(clas, intv_samples, sample_labels, scoring, show_training)
 
-cross_val(knn_classifier, ffts, segment_labels, scoring, show_training)
+ffts, infs, ses = preprocess_ecg.feature_extraction(ecgs, sample_rate)
+features = np.stack((infs, ses), axis=-1)
+print(features.shape)
+
+print("ffts")
+cross_val(clas, ffts, labels, scoring, show_training)
+
+print("infs")
+cross_val(clas, infs, labels, scoring, show_training)
+
+print("ses")
+cross_val(clas, ses, labels, scoring, show_training)
