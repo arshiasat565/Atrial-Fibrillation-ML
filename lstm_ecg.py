@@ -20,48 +20,48 @@ def lstm_model(model):
     return model
 
 print("lstm")
-# # get patient data
-# ecgs, times, Rpeak_intvs, segment_labels, interval_labels, sample_rate = preprocess_ecg.data_init(min_freq, max_freq, length)
-# labels = np.array(segment_labels)
-# ffts, infs, ses = preprocess_ecg.feature_extraction(ecgs, sample_rate)
-# features = np.stack((infs, ses), axis=-1)
-# print(features.shape)
+# get patient data
+ecgs, times, Rpeak_intvs, segment_labels, interval_labels, sample_rate = preprocess_ecg.data_init(min_freq, max_freq, length)
+labels = np.array(segment_labels)
 
-# print("ecg signals")
-# model, feature_labels = preprocess_ecg.split_dataset(ecgs, labels)
-# model = lstm_model(model)
-# preprocess_ecg.model_fit(model, feature_labels)
+ffts, infs, ses = preprocess_ecg.feature_extraction(ecgs, sample_rate)
+features = np.stack((infs, ses), axis=-1)
+print(features.shape)
 
-# intv_samples, sample_labels = preprocess_ppg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
+print("ecg signals")
+model, feature_labels = preprocess_ecg.split_dataset(ecgs, labels)
+model = lstm_model(model)
+preprocess_ecg.model_fit(model, feature_labels)
 
-# # print("Rpeak_intvs")
-# # model, feature_labels = preprocess_ecg.split_dataset(intv_samples, sample_labels)
-# # model = lstm_model(model)
-# # preprocess_ecg.model_fit(model, feature_labels)
+intv_samples, sample_labels = preprocess_ecg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
 
-# print("ffts")
-# model, feature_labels = preprocess_ecg.split_dataset(ffts, labels)
-# model = lstm_model(model)
-# preprocess_ecg.model_fit(model, feature_labels)
+print("Rpeak_intvs")
+model, feature_labels = preprocess_ecg.split_dataset(intv_samples, sample_labels)
+model = lstm_model(model)
+preprocess_ecg.model_fit(model, feature_labels)
 
-# print("infs")
-# model, feature_labels = preprocess_ecg.split_dataset(infs, labels)
-# model = lstm_model(model)
-# preprocess_ecg.model_fit(model, feature_labels)
+print("ffts")
+model, feature_labels = preprocess_ecg.split_dataset(ffts, labels)
+model = lstm_model(model)
+preprocess_ecg.model_fit(model, feature_labels)
 
-# print("ses")
-# model, feature_labels = preprocess_ecg.split_dataset(ses, labels)
-# model = lstm_model(model)
-# preprocess_ecg.model_fit(model, feature_labels)
+print("infs")
+model, feature_labels = preprocess_ecg.split_dataset(infs, labels)
+model = lstm_model(model)
+preprocess_ecg.model_fit(model, feature_labels)
 
-# print("infs & ses")
-# model, feature_labels = preprocess_ecg.split_dataset(features, labels)
-# model = lstm_model(model)
-# preprocess_ecg.model_fit(model, feature_labels)
+print("ses")
+model, feature_labels = preprocess_ecg.split_dataset(ses, labels)
+model = lstm_model(model)
+preprocess_ecg.model_fit(model, feature_labels)
+
+print("infs & ses")
+model, feature_labels = preprocess_ecg.split_dataset(features, labels)
+model = lstm_model(model)
+preprocess_ecg.model_fit(model, feature_labels)
 
 
 # get generated data
-print("generated")
 ecgs, labels, Rpeak_intvs, sample_rate = preprocess_ecg.large_data(signal_length)
 ffts, infs, ses = preprocess_ecg.feature_extraction(ecgs, sample_rate)
 features = np.stack((infs, ses), axis=-1)
@@ -72,12 +72,12 @@ model, feature_labels = preprocess_ecg.split_dataset(ecgs, labels)
 model = lstm_model(model)
 preprocess_ecg.model_fit(model, feature_labels)
 
-# intv_samples, sample_labels = preprocess_ppg.split_Rpeak_intvs(Rpeak_intvs, labels)
+intv_samples, sample_labels = preprocess_ecg.split_Rpeak_intvs(Rpeak_intvs, labels)
 
-# print("Rpeak_intvs")
-# model, feature_labels = preprocess_ecg.split_dataset(intv_samples, sample_labels)
-# model = lstm_model(model)
-# preprocess_ecg.model_fit(model, feature_labels)
+print("Rpeak_intvs")
+model, feature_labels = preprocess_ecg.split_dataset(intv_samples, sample_labels)
+model = lstm_model(model)
+preprocess_ecg.model_fit(model, feature_labels)
 
 print("ffts")
 model, feature_labels = preprocess_ecg.split_dataset(ffts, labels)

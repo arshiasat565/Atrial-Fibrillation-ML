@@ -75,7 +75,7 @@ print("cnn")
 
 
 # get generated data
-ppgs, labels, Rpeak_intvs, sample_rate = preprocess_ppg.large_data(signal_length)
+ppgs, labels, Rpeak_intvs, interval_labels, sample_rate = preprocess_ppg.large_data(signal_length)
 
 # print("ppg signals")
 # model, feature_labels = preprocess_ppg.split_dataset(ppgs, labels)

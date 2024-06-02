@@ -36,10 +36,10 @@ ffts, infs, ses = preprocess_ppg.feature_extraction_db(ppgs, sample_rate)
 features = np.stack((infs, ses), axis=-1)
 print(features.shape)
 
-print("ppg signals")
-model, feature_labels = preprocess_ppg.split_dataset(ppgs, labels)
-model = lstm_model(model)
-preprocess_ppg.model_fit(model, feature_labels)
+# print("ppg signals")
+# model, feature_labels = preprocess_ppg.split_dataset(ppgs, labels)
+# model = lstm_model(model)
+# preprocess_ppg.model_fit(model, feature_labels)
 
 # intv_samples, sample_labels = preprocess_ppg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
 
@@ -70,12 +70,12 @@ preprocess_ppg.model_fit(model, feature_labels)
 
 
 # get generated data
-ppgs, labels, Rpeak_intvs, sample_rate = preprocess_ppg.large_data(signal_length)
+ppgs, labels, Rpeak_intvs, interval_labels, sample_rate = preprocess_ppg.large_data(signal_length)
 
-print("ppg signals")
-model, feature_labels = preprocess_ppg.split_dataset(ppgs, labels)
-model = lstm_model(model)
-preprocess_ppg.model_fit(model, feature_labels)
+# print("ppg signals")
+# model, feature_labels = preprocess_ppg.split_dataset(ppgs, labels)
+# model = lstm_model(model)
+# preprocess_ppg.model_fit(model, feature_labels)
 
 # intv_samples, sample_labels = preprocess_ppg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
 
@@ -87,7 +87,6 @@ preprocess_ppg.model_fit(model, feature_labels)
 ffts, infs, ses, labels = preprocess_ppg.feature_extraction_gen(ppgs, labels, sample_rate)
 features = np.stack((infs, ses), axis=-1)
 print(features.shape)
-
 
 print("ffts")
 model, feature_labels = preprocess_ppg.split_dataset(ffts, labels)
