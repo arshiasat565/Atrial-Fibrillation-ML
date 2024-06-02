@@ -254,6 +254,7 @@ def large_data(signal_length, size=None):
     ppgs = []
     labels = []
     Rpeak_intvs = []
+    interval_labels = []
 
     print("generated 1")
     # data init
@@ -270,10 +271,10 @@ def large_data(signal_length, size=None):
         ppgs.append(ppg)
         Rpeak_intv1 = Rpeak_intervals([ppg1], [time])
         Rpeak_intv2 = Rpeak_intervals([ppg2], [time])
-        max_length = max([len(Rpeak_intv1), len(Rpeak_intv2)])
-        Rpeak_intv1 = np.pad(Rpeak_intv1, (0, max_length - len(Rpeak_intv1)), constant_values=0)
-        Rpeak_intv2 = np.pad(Rpeak_intv2, (0, max_length - len(Rpeak_intv2)), constant_values=0)
-        Rpeak_intvs.append(np.stack((Rpeak_intv1, Rpeak_intv2)))
+        Rpeak_intvs.append(Rpeak_intv1)
+        Rpeak_intvs.append(Rpeak_intv2)
+        interval_labels.append(True)
+        interval_labels.append(True)
         labels.append(True)
         
     if size != None:
@@ -293,10 +294,10 @@ def large_data(signal_length, size=None):
         ppgs.append(ppg)
         Rpeak_intv1 = Rpeak_intervals([ppg1], [time])
         Rpeak_intv2 = Rpeak_intervals([ppg2], [time])
-        max_length = max([len(Rpeak_intv1), len(Rpeak_intv2)])
-        Rpeak_intv1 = np.pad(Rpeak_intv1, (0, max_length - len(Rpeak_intv1)), constant_values=0)
-        Rpeak_intv2 = np.pad(Rpeak_intv2, (0, max_length - len(Rpeak_intv2)), constant_values=0)
-        Rpeak_intvs.append(np.stack((Rpeak_intv1, Rpeak_intv2)))
+        Rpeak_intvs.append(Rpeak_intv1)
+        Rpeak_intvs.append(Rpeak_intv2)
+        interval_labels.append(False)
+        interval_labels.append(False)
         labels.append(False)
         
     if size != None:
@@ -306,8 +307,7 @@ def large_data(signal_length, size=None):
     # print(len(ppgs))
 
     ppgs, labels = np.array(ppgs), np.array(labels)
-    # labels = labels.reshape(len(labels), 1)
-    return ppgs, labels, Rpeak_intvs, sample_rate
+    return ppgs, labels, Rpeak_intvs, interval_labels, sample_rate
 
 # for patient database
 def feature_extraction_db(ppgs, sample_rate):

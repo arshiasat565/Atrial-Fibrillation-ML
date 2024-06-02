@@ -38,37 +38,37 @@ def cross_val(clas, ppgs, labels, cv, scoring, return_train_score):
         print(f"Mean {metric_name}: {score.mean():.2f} (±{score.std():.2f})")
 
 print("svm")
-# # get patient data
-# ppgs, times, Rpeak_intvs, segment_labels, interval_labels, sample_rate = preprocess_ppg.data_init(min_freq, max_freq, length)
-# labels = np.array(segment_labels)
+# get patient data
+ppgs, times, Rpeak_intvs, segment_labels, interval_labels, sample_rate = preprocess_ppg.data_init(min_freq, max_freq, length)
+labels = np.array(segment_labels)
 
-# clas = svm.SVC(kernel="rbf", probability=True, C=1, gamma=0.001) #optimised rbf params
-# length_sec = length / sample_rate
-# # split ppg
-# print(f"\nBy {length_sec}s ppg samples")
-# print("sample count:", len(ppgs))
+clas = svm.SVC(kernel="rbf", probability=True, C=1, gamma=0.001) #optimised rbf params
+length_sec = length / sample_rate
+# split ppg
+print(f"\nBy {length_sec}s ppg samples")
+print("sample count:", len(ppgs))
 
-# # 10 fold cross validation svm, use ppg samples
-# shuffle_split = ShuffleSplit(n_splits=10)
-# cross_val(clas, ppgs, segment_labels, shuffle_split, scoring, show_training) #67%acc
+# 10 fold cross validation svm, use ppg samples
+shuffle_split = ShuffleSplit(n_splits=10)
+cross_val(clas, ppgs, segment_labels, shuffle_split, scoring, show_training) #67%acc
 
-# intv_samples, sample_labels = preprocess_ppg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
+intv_samples, sample_labels = preprocess_ppg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
 
 # 10 fold cross validation svm, use Rpeak_intv samples
-# cross_val(clas, intv_samples, sample_labels, shuffle_split, scoring, show_training) #90%acc w rbf params
+cross_val(clas, intv_samples, sample_labels, shuffle_split, scoring, show_training) #90%acc w rbf params
 
-# ffts, infs, ses = preprocess_ppg.feature_extraction_db(ppgs, sample_rate)
-# features = np.stack((infs, ses), axis=-1)
-# print(features.shape)
+ffts, infs, ses = preprocess_ppg.feature_extraction_db(ppgs, sample_rate)
+features = np.stack((infs, ses), axis=-1)
+print(features.shape)
 
-# print("ffts")
-# cross_val(clas, ffts, labels, shuffle_split, scoring, show_training)
+print("ffts")
+cross_val(clas, ffts, labels, shuffle_split, scoring, show_training)
 
-# print("infs")
-# cross_val(clas, infs, labels, shuffle_split, scoring, show_training)
+print("infs")
+cross_val(clas, infs, labels, shuffle_split, scoring, show_training)
 
-# print("ses")
-# cross_val(clas, ses, labels, shuffle_split, scoring, show_training)
+print("ses")
+cross_val(clas, ses, labels, shuffle_split, scoring, show_training)
 
 
 # # diff train test split changes accuracy by ±1%
@@ -82,11 +82,10 @@ print("svm")
 #     accuracy = accuracy_score(segment_labels_test, segment_labels_pred)
 #     print(accuracy)
 
-ppgs, labels, Rpeak_intvs, sample_rate = preprocess_ppg.large_data(signal_length)
+ppgs, labels, Rpeak_intvs, interval_labels, sample_rate = preprocess_ppg.large_data(signal_length)
 labels = labels.ravel()
 flat_ppgs = np.concatenate((ppgs[:, 0, :], ppgs[:, 1, :]), axis=0)
 flat_labels = np.concatenate((labels, labels), axis=0)
-flat_Rpeak_intvs = np.concatenate((Rpeak_intvs[:, 0, :], Rpeak_intvs[:, 1, :]), axis=0)
 
 clas = svm.SVC(kernel="rbf", probability=True, C=1, gamma=0.001) #optimised rbf params C:[1, 10, 100]
 length_sec = signal_length / sample_rate
@@ -96,22 +95,22 @@ print("sample count:", len(ppgs))
 
 # 10 fold cross validation svm, use ppg samples
 shuffle_split = ShuffleSplit(n_splits=10)
-# cross_val(clas, flat_ppgs, flat_labels, shuffle_split, scoring, show_training)
+cross_val(clas, flat_ppgs, flat_labels, shuffle_split, scoring, show_training)
 
-intv_samples, sample_labels = preprocess_ppg.split_Rpeak_intvs(flat_Rpeak_intvs, flat_labels)
+intv_samples, sample_labels = preprocess_ppg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
 
 # 10 fold cross validation svm, use Rpeak_intv samples
 cross_val(clas, intv_samples, sample_labels, shuffle_split, scoring, show_training)
 
-# ffts, infs, ses, labels = preprocess_ppg.feature_extraction_gen(ppgs, labels, sample_rate)
-# features = np.stack((infs, ses), axis=-1)
-# print(features.shape)
+ffts, infs, ses, labels = preprocess_ppg.feature_extraction_gen(ppgs, labels, sample_rate)
+features = np.stack((infs, ses), axis=-1)
+print(features.shape)
 
-# print("ffts")
-# cross_val(clas, ffts, labels, shuffle_split, scoring, show_training)
+print("ffts")
+cross_val(clas, ffts, labels, shuffle_split, scoring, show_training)
 
-# print("infs")
-# cross_val(clas, infs, labels, shuffle_split, scoring, show_training)
+print("infs")
+cross_val(clas, infs, labels, shuffle_split, scoring, show_training)
 
-# print("ses")
-# cross_val(clas, ses, labels, shuffle_split, scoring, show_training)
+print("ses")
+cross_val(clas, ses, labels, shuffle_split, scoring, show_training)
