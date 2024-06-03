@@ -130,7 +130,7 @@ def Rpeak_intervals(ppgs, times):
 
 def fft(ppg, sample_rate):
     # Compute the FFT
-    fft_result = np.fft.fft(ppg)
+    fft_result = np.fft.fft(ppg, 1000)
     frequencies = np.fft.fftfreq(len(fft_result), 1/sample_rate)  # Assuming a sampling frequency of 1000 Hz
 
     # Plot the magnitude spectrum
@@ -415,6 +415,7 @@ def model_fit(model, feature_labels):
     accs = []
     losses = []
     results = []
+    metric_names = np.concatenate((['loss'], metrics, ['f1_score']))
     for i in range(10):
         model.fit(feature_train, feature_label_train, validation_data=(feature_val, feature_label_val), epochs=100, verbose=0)
 
@@ -423,7 +424,6 @@ def model_fit(model, feature_labels):
         # print(result)
         results.append(result)
 
-    metric_names = np.concatenate((['loss'], metrics, ['f1_score']))
     np.set_printoptions(suppress=True)
     avg_results = np.average(results, axis=0)
     print("Average metrics:")
