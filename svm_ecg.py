@@ -11,7 +11,7 @@ from sklearn.model_selection import KFold
 from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection import cross_val_score, cross_validate
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+from sklearn.metrics import make_scorer, accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, hinge_loss
 
 # scoring metrics
 scoring = {
@@ -19,7 +19,8 @@ scoring = {
     'precision': make_scorer(precision_score),
     'recall': make_scorer(recall_score),
     'f1': make_scorer(f1_score),
-    'roc_auc': make_scorer(roc_auc_score)
+    'roc_auc': make_scorer(roc_auc_score),
+    'hinge_loss': make_scorer(hinge_loss)
 }
 show_training = False
 
@@ -58,6 +59,8 @@ intv_samples, sample_labels = preprocess_ecg.split_Rpeak_intvs(Rpeak_intvs, inte
 cross_val(clas, intv_samples, sample_labels, scoring, show_training) #90%acc w rbf params
 
 ffts, infs, ses = preprocess_ecg.feature_extraction(ecgs, sample_rate)
+features = np.column_stack((infs, ses))
+print(features.shape)
 
 print("ffts")
 cross_val(clas, ffts, labels, scoring, show_training)
@@ -67,6 +70,9 @@ cross_val(clas, infs, labels, scoring, show_training)
 
 print("ses")
 cross_val(clas, ses, labels, scoring, show_training)
+
+print("infs & ses")
+cross_val(clas, features, labels, scoring, show_training)
 
 
 # # diff train test split changes accuracy by ±1%
