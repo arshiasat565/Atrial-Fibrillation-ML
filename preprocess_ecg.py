@@ -6,7 +6,7 @@ import scipy.signal as sps
 import matplotlib.pyplot as plt
 import glob
 import lab_funcs_ecg
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, ShuffleSplit
 import keras.metrics as km
 from keras.models import Sequential
 from keras.layers import Input
@@ -118,7 +118,7 @@ def Rpeak_intervals(ecgs, times):
         # ax4.set_xlabel('Time [s]') 
         # ax4.set_title('R-wave peaks step 3: R-wave peaks')
         # ax4.plot(time, ecg, color = 'b', label = 'ECG')
-        # ax4.plot(time[Rpeaks], ecg[Rpeaks], "x", color = 'y')
+        # ax4.plot(time[Rpeaks], ecg[Rpeaks], "x", color = 'black')
         # ax4.set_ylabel('Activation []')
         # ax4.grid(alpha=.1, ls='--')
         # plt.tight_layout()
@@ -213,7 +213,7 @@ def time_dependent_frequency(signal, sampling_rate, window_size=128, overlap=0.5
     # plt.plot(times, time_dep_freq)
     # plt.xlabel('Time (s)')
     # plt.ylabel('Frequency (Hz)')
-    # plt.title('Time-Dependent Frequency')
+    # plt.title('Instantaneous Frequency')
     # plt.grid(True)
     # plt.show()
     return time_dep_freq
@@ -236,6 +236,12 @@ def spectral_entropy(signal, sampling_rate, window_size=128, overlap=0.5):
     ps = np.abs(spectrogram)**2 # power spectrogram
     norm_ps = ps / np.sum(ps)
     spectral_entropy = -np.sum(norm_ps * np.log2(norm_ps), axis=0)
+    # plt.plot(times, spectral_entropy)
+    # plt.xlabel('Time (s)')
+    # plt.ylabel('Spectral Entrophy')
+    # plt.title('Spectral Entropy (AF)')
+    # plt.grid(True)
+    # plt.show()
     return spectral_entropy
 
 # data from generator; 100 RR intervals (80s) cut to signal_length, AF/nonAF data 1024 each 
@@ -338,42 +344,45 @@ def split_Rpeak_intvs(Rpeak_intvs, labels):
 
     return(intv_samples, sample_labels)
 
-def split_dataset(features, labels):
-    features, labels = np.array(features), np.array(labels)
-    feature_train, feature_test, feature_label_train, feature_label_test = train_test_split(features, labels, test_size=0.2)
-    feature_train, feature_val, feature_label_train, feature_label_val = train_test_split(feature_train, feature_label_train, test_size=0.2)
-    print((feature_train.shape), (feature_val.shape), (feature_test.shape))
-    print((feature_label_train.shape), (feature_label_val.shape), (feature_label_test.shape))
-
-    if features.ndim > 2:
-        num = features.shape[2]
-    else:
-        num = 1
-    model = Sequential()
-    model.add(Input(shape=(features.shape[1], num)))
-
-    return model, (feature_train, feature_val, feature_test, feature_label_train, feature_label_val, feature_label_test)
-
 def f1_score(precision, recall):
+    if precision + recall == 0:
+        return 0.0
     return 2 * precision * recall / (precision + recall)
 
 metrics = [
     'accuracy', 'precision', 'recall', km.AUC(curve='ROC')
 ]
 
-def model_fit(model, feature_labels):
-    feature_train, feature_val, feature_test, feature_label_train, feature_label_val, feature_label_test = feature_labels
+def model_fit(base_model, callbacks, features, labels):
+
+    features, labels = np.array(features), np.array(labels)
+    print(features.shape, labels.shape)
+    shuffle_split = ShuffleSplit(n_splits=10)
 
     accs = []
     losses = []
     results = []
-    for i in range(10):
-        model.fit(feature_train, feature_label_train, validation_data=(feature_val, feature_label_val), epochs=100, verbose=0)
 
+    fold = 1
+    for train_index, test_index in shuffle_split.split(features):
+        print(f"Fold {fold}", train_index.size, test_index.size)
+        fold += 1
+
+        feature_train, feature_test = features[train_index], features[test_index]
+        feature_label_train, feature_label_test = labels[train_index], labels[test_index]
+    
+        feature_train, feature_val, feature_label_train, feature_label_val = train_test_split(feature_train, feature_label_train, test_size=0.2)
+
+        print((feature_train.shape), (feature_val.shape), (feature_test.shape))
+        print((feature_label_train.shape), (feature_label_val.shape), (feature_label_test.shape))
+
+        model = base_model(features)
+        history = model.fit(feature_train, feature_label_train, validation_data=(feature_val, feature_label_val), epochs=100, verbose=0, callbacks=callbacks)
         result = model.evaluate(feature_test, feature_label_test, verbose=1)
         result.append(f1_score(result[2], result[3]))
-        # print(result)
         results.append(result)
+        actual_epochs = len(history.history['loss'])
+        print(f"Actual number of epochs run: {actual_epochs}")
 
     metric_names = np.concatenate((['loss'], metrics, ['f1_score']))
     np.set_printoptions(suppress=True)

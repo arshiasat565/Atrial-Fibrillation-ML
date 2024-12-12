@@ -6,7 +6,7 @@ import scipy.signal as sps
 import matplotlib.pyplot as plt
 import glob
 import lab_funcs_ppg
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, ShuffleSplit
 import keras.metrics as km
 from keras.models import Sequential
 from keras.layers import Input
@@ -385,23 +385,6 @@ def split_Rpeak_intvs(Rpeak_intvs, labels):
 
     return(intv_samples, sample_labels)
 
-def split_dataset(features, labels):
-    features, labels = np.array(features), np.array(labels)
-    print(features.shape, labels.shape)
-    feature_train, feature_test, feature_label_train, feature_label_test = train_test_split(features, labels, test_size=0.2)
-    feature_train, feature_val, feature_label_train, feature_label_val = train_test_split(feature_train, feature_label_train, test_size=0.2)
-    print((feature_train.shape), (feature_val.shape), (feature_test.shape))
-    print((feature_label_train.shape), (feature_label_val.shape), (feature_label_test.shape))
-
-    if features.ndim > 2:
-        num = features.shape[2]
-    else:
-        num = 1
-    model = Sequential()
-    model.add(Input(shape=(features.shape[1], num)))
-
-    return model, (feature_train, feature_val, feature_test, feature_label_train, feature_label_val, feature_label_test)
-
 def f1_score(precision, recall):
     return 2 * precision * recall / (precision + recall)
 
@@ -409,21 +392,39 @@ metrics = [
     'accuracy', 'precision', 'recall', km.AUC(curve='ROC')
 ]
 
-def model_fit(model, feature_labels):
-    feature_train, feature_val, feature_test, feature_label_train, feature_label_val, feature_label_test = feature_labels
+def model_fit(base_model, callbacks, features, labels):
+
+    features, labels = np.array(features), np.array(labels)
+    print(features.shape, labels.shape)
+    shuffle_split = ShuffleSplit(n_splits=10)
 
     accs = []
     losses = []
     results = []
-    metric_names = np.concatenate((['loss'], metrics, ['f1_score']))
-    for i in range(10):
-        model.fit(feature_train, feature_label_train, validation_data=(feature_val, feature_label_val), epochs=100, verbose=0)
 
+    fold = 1
+    for train_index, test_index in shuffle_split.split(features):
+        print(f"Fold {fold}", train_index.size, test_index.size)
+        fold += 1
+
+        feature_train, feature_test = features[train_index], features[test_index]
+        feature_label_train, feature_label_test = labels[train_index], labels[test_index]
+    
+        feature_train, feature_val, feature_label_train, feature_label_val = train_test_split(feature_train, feature_label_train, test_size=0.2)
+
+        print((feature_train.shape), (feature_val.shape), (feature_test.shape))
+        print((feature_label_train.shape), (feature_label_val.shape), (feature_label_test.shape))
+
+        model = base_model(features)
+        history = model.fit(feature_train, feature_label_train, validation_data=(feature_val, feature_label_val), epochs=100, verbose=0, callbacks=callbacks)
         result = model.evaluate(feature_test, feature_label_test, verbose=1)
         result.append(f1_score(result[2], result[3]))
-        # print(result)
         results.append(result)
+        actual_epochs = len(history.history['loss'])
+        print(f"Actual number of epochs run: {actual_epochs}")
+        
 
+    metric_names = np.concatenate((['loss'], metrics, ['f1_score']))
     np.set_printoptions(suppress=True)
     avg_results = np.average(results, axis=0)
     print("Average metrics:")
