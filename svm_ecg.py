@@ -80,30 +80,35 @@ cross_val(clas, ses, labels, scoring, show_training)
 #     accuracy = accuracy_score(segment_labels_test, segment_labels_pred)
 #     print(accuracy)
 
-ecgs, labels, Rpeak_intvs, sample_rate = preprocess_ecg.large_data(signal_length)
+# ecgs, labels, Rpeak_intvs, sample_rate = preprocess_ecg.large_data(signal_length)
+# # ecgs, labels, Rpeak_intvs, sample_rate = preprocess_ecg.demo_data(2500) # 10 secs (250Hz large_data mat)
+# clas = svm.SVC(kernel="rbf", probability=True, C=1, gamma=0.001) #TODO optimised rbf params C:[1, 10, 100]
+# length_sec = signal_length / sample_rate
+# # split ecg
+# print(f"\nBy {length_sec}s ecg samples")
+# print("sample count:", len(ecgs))
 
-clas = svm.SVC(kernel="rbf", probability=True, C=1, gamma=0.001) #TODO optimised rbf params C:[1, 10, 100]
-length_sec = signal_length / sample_rate
-# split ecg
-print(f"\nBy {length_sec}s ecg samples")
-print("sample count:", len(ecgs))
+# # 10 fold cross validation svm, use ecg samples
+# shuffle_split = ShuffleSplit(n_splits=10)
+# cross_val(clas, ecgs, labels, scoring, show_training) #TODO 67%acc
 
-# 10 fold cross validation svm, use ecg samples
-shuffle_split = ShuffleSplit(n_splits=10)
-cross_val(clas, ecgs, labels, scoring, show_training) #TODO 67%acc
+# intv_samples, sample_labels = preprocess_ecg.split_Rpeak_intvs(Rpeak_intvs, labels)
 
-intv_samples, sample_labels = preprocess_ecg.split_Rpeak_intvs(Rpeak_intvs, interval_labels)
+# # 10 fold cross validation svm, use Rpeak_intv samples
+# cross_val(clas, intv_samples, sample_labels, scoring, show_training) #TODO 90%acc w rbf params
 
-# 10 fold cross validation svm, use Rpeak_intv samples
-cross_val(clas, intv_samples, sample_labels, scoring, show_training) #TODO 90%acc w rbf params
+# ffts, infs, ses = preprocess_ecg.feature_extraction(ecgs, sample_rate)
+# features = np.column_stack((infs, ses))
+# print(features.shape)
 
-ffts, infs, ses = preprocess_ecg.feature_extraction(ecgs, sample_rate)
+# print("ffts")
+# cross_val(clas, ffts, labels, scoring, show_training)
 
-print("ffts")
-cross_val(clas, ffts, labels, scoring, show_training)
+# print("infs")
+# cross_val(clas, infs, labels, scoring, show_training)
 
-print("infs")
-cross_val(clas, infs, labels, scoring, show_training)
+# print("ses")
+# cross_val(clas, ses, labels, scoring, show_training)
 
-print("ses")
-cross_val(clas, ses, labels, scoring, show_training)
+# print("infs & ses")
+# cross_val(clas, features, labels, scoring, show_training)
