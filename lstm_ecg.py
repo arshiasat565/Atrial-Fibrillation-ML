@@ -1,10 +1,10 @@
 import numpy as np
 import preprocess_ecg
 from sklearn.model_selection import train_test_split
-import keras.metrics as km
-from keras.models import Sequential
-from keras.layers import LSTM, Dense, Input, Bidirectional, Dropout
-from keras.callbacks import EarlyStopping, ModelCheckpoint
+import keras.api.metrics as km
+from keras.api.models import Sequential
+from keras.api.layers import LSTM, Dense, Input, Bidirectional, Dropout
+from keras.api.callbacks import EarlyStopping, ModelCheckpoint
 
 signal_length = 7500 # 30 secs (250Hz large_data mat)
 min_freq = 5

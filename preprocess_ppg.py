@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 import glob
 import lab_funcs_ppg
 from sklearn.model_selection import train_test_split, ShuffleSplit
-import keras.metrics as km
-from keras.models import Sequential
-from keras.layers import Input
+import keras.api.metrics as km
+from keras.api.models import Sequential
+from keras.api.layers import Input
 
 
 def bandpass(data: np.ndarray, edges: list[float], sample_rate: float, poles: int = 5):

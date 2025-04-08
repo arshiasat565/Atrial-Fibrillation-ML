@@ -1,9 +1,9 @@
 import numpy as np
 import preprocess_ppg
 from sklearn.model_selection import train_test_split
-import keras.metrics as km
-from keras.models import Sequential
-from keras.layers import Conv1D, MaxPooling1D, Flatten, Dense, Input, Dropout
+import keras.api.metrics as km
+from keras.api.models import Sequential
+from keras.api.layers import Conv1D, MaxPooling1D, Flatten, Dense, Input, Dropout
 
 signal_length = 7500 # 30 secs (250Hz large_data mat)
 min_freq = 0.5
